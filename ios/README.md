@@ -14,17 +14,14 @@ You can now open the iOS plugin directly in Xcode:
 
 ```
 ios/
-├── revolut_sdk_bridge.xcodeproj/          # Xcode project file
-│   ├── project.pbxproj                    # Main project configuration
-│   ├── project.xcworkspace/               # Workspace configuration
-│   └── xcshareddata/xcschemes/           # Build schemes
-├── Classes/
-│   └── RevolutSdkBridgePlugin.swift      # Main plugin implementation
-├── Assets/                                # Asset catalog
-├── Resources/
-│   └── PrivacyInfo.xcprivacy             # Privacy manifest
-├── revolut_sdk_bridge.podspec            # CocoaPods specification
-└── Info.plist                            # Framework info
+├── revolut_sdk_bridge.xcodeproj/
+├── revolut_sdk_bridge/
+│   ├── Package.swift
+│   └── Sources/revolut_sdk_bridge/
+│       ├── RevolutSdkBridgePlugin.swift
+│       └── PrivacyInfo.xcprivacy
+├── revolut_sdk_bridge.podspec
+└── Info.plist
 ```
 
 ## 🔧 Building the Plugin

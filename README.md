@@ -3,7 +3,7 @@
 A Flutter plugin for accepting **Revolut Pay** payments using the native Revolut Pay
 SDKs — the **Revolut Pay Lite SDK** on Android and the **Revolut Pay SDK** on iOS.
 
-> Status: early release (`0.2.0`). The native payment flows must be verified against a
+> Status: early release (`0.2.1`). The native payment flows must be verified against a
 > real Revolut **merchant sandbox key** on a device/simulator — see
 > [Sandbox testing](#sandbox-testing). This plugin wraps native SDKs that cannot run in
 > CI, so always test the real flow before shipping.
@@ -88,6 +88,21 @@ packaging {
 ```
 
 ### iOS setup
+
+The plugin supports Swift Package Manager and CocoaPods. Flutter selects SwiftPM
+when it is enabled in the host app (Flutter 3.44+); no manual Xcode package installation is needed.
+Both integrations use the official Revolut Pay SDK 3.18.0 and require iOS 15+.
+
+To enable SwiftPM for your app, add this under `flutter:` in its `pubspec.yaml`:
+
+```yaml
+flutter:
+  config:
+    enable-swift-package-manager: true
+```
+
+After updating the Git dependency, run `flutter pub get` and rebuild the iOS app.
+
 
 Add your return-URL scheme and the Revolut query schemes to `ios/Runner/Info.plist`:
 

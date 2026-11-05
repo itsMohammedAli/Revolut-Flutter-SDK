@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Add iOS Swift Package Manager support using the official Revolut 3.18.0 package.
+- Share Swift sources and the privacy manifest between SwiftPM and CocoaPods.
+
 ## 0.2.0
 
 - Upgrade Android Revolut Pay Lite to 3.4.0 and iOS Revolut Pay to 3.18.0.

@@ -37,3 +37,31 @@ jobs:
       - run: flutter pub get
       - run: flutter build apk --debug
         working-directory: example
+
+  ios-build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        swiftpm: [true, false]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+      - name: Select iOS dependency manager
+        env:
+          SWIFTPM: ${{ matrix.swiftpm }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          from pathlib import Path
+          path = Path('example/pubspec.yaml')
+          path.write_text(path.read_text().replace(
+              'enable-swift-package-manager: true',
+              'enable-swift-package-manager: ' + os.environ['SWIFTPM']))
+          PYTHON
+      - run: flutter pub get
+      - run: flutter build ios --simulator --debug --no-codesign
+        working-directory: example

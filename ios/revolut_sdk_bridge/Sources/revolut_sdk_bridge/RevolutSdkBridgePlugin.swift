@@ -1,6 +1,9 @@
 import Flutter
 import UIKit
 import RevolutPayments
+#if SWIFT_PACKAGE
+import RevolutPay
+#endif
 
 fileprivate func maskKey(_ value: String?) -> String {
     guard let value = value, !value.isEmpty else { return "UNSET" }
