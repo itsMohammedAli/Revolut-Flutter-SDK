@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Remove obsolete setup guides, workaround scripts, standalone native scaffolding,
+  editor settings, and a committed build report.
+- Consolidate documentation and replace the stale example widget test with a demo
+  smoke test; ignore generated build output at every directory level.
+
 ## 0.2.1
 
 - Add iOS Swift Package Manager support using the official Revolut 3.18.0 package.
