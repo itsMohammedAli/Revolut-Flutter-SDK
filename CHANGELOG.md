@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Prevent Android payment forms from reopening for completed orders, block overlapping
+  native/custom payment attempts, and ignore duplicate terminal callbacks.
+
 - Restrict Dart and native diagnostics/log callbacks to debug builds.
 
 - Use Freezed and generated JSON serializers for data models, with value equality and copyWith.

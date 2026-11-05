@@ -200,6 +200,11 @@ final started = await sdk.processPayment(
 `onPaymentResult`. Custom payments use the default return URL
 `revolut-sdk-bridge://revolut-pay`, which must be registered in your app.
 Android-specific order and lifecycle events are also available on `sdk.callbacks`.
+Android allows one active payment at a time across native and custom buttons.
+After success, the same order token cannot start another payment during the plugin
+session, including after rebuilding the widget. Create a new backend order for a
+new payment. Failed or cancelled payments can retry the same token. Custom payment
+calls report `PAYMENT_IN_PROGRESS` or `ORDER_ALREADY_COMPLETED` when blocked.
 
 ### Display a promotional banner
 

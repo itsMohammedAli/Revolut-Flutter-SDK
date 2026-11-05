@@ -18,6 +18,7 @@ import android.content.Intent
 import io.flutter.plugin.common.PluginRegistry.NewIntentListener
 import com.revolutpay.flutter.generated.*
 import com.revolutpay.flutter.views.*
+import com.revolutpay.flutter.support.PaymentSession
 import com.revolutpay.flutter.support.resolvePreferredMode
 
 class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewIntentListener {
@@ -38,6 +39,8 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
     // Controller reused by the one-shot pay() (custom button) flow
     private var oneShotController: RevolutPaymentController? = null
     private var oneShotControllerActivity: ComponentActivity? = null
+
+    internal val paymentSession = PaymentSession()
 
     private var isInitialized = false
     private var currentEnvironment: RevolutPaymentsSDK.Environment? = null
@@ -200,7 +203,19 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
             )
 
             logToDart("INFO", "Starting one-shot payment for order token: ${maskOrderToken(orderToken)}")
-            controller.pay(orderParams)
+            val rejection = paymentSession.start(this, orderToken)
+            if (rejection != null) {
+                throw FlutterError(rejection, when (rejection) {
+                    "ORDER_ALREADY_COMPLETED" -> "This order has already completed. Create a new order to pay again."
+                    else -> "A payment is already in progress."
+                }, null)
+            }
+            try {
+                controller.pay(orderParams)
+            } catch (e: Exception) {
+                paymentSession.finish(this, false)
+                throw e
+            }
 
             // The real outcome arrives asynchronously through Pigeon callbacks.
             sendEvent("onPaymentStatusUpdate", mapOf(
@@ -235,17 +250,18 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
     }
 
     private fun handleOneShotPaymentResult(paymentResult: PaymentResult) {
+        val orderToken = paymentSession.finish(this, paymentResult == PaymentResult.Success) ?: return
         val timestamp = System.currentTimeMillis()
         val result = when (paymentResult) {
-            PaymentResult.Success -> NativePaymentResult(true, "Payment completed successfully", "", timestamp)
-            is PaymentResult.UserAbandonedPayment -> NativePaymentResult(false, "Payment abandoned by user", "user_abandoned_payment", timestamp)
-            is PaymentResult.Failure -> NativePaymentResult(false, "Payment failed", paymentResult.exception.message ?: "payment_failure", timestamp)
+            PaymentResult.Success -> NativePaymentResult(true, "Payment completed successfully", "", timestamp, orderToken = orderToken)
+            is PaymentResult.UserAbandonedPayment -> NativePaymentResult(false, "Payment abandoned by user", "user_abandoned_payment", timestamp, orderToken = orderToken)
+            is PaymentResult.Failure -> NativePaymentResult(false, "Payment failed", paymentResult.exception.message ?: "payment_failure", timestamp, orderToken = orderToken)
         }
         sendPaymentResultToDart(result)
         when (paymentResult) {
             PaymentResult.Success -> sendEvent(
                 "onOrderCompleted",
-                mapOf<String, Any>("success" to true, "timestamp" to System.currentTimeMillis())
+                mapOf<String, Any>("success" to true, "orderToken" to orderToken, "orderId" to orderToken, "timestamp" to timestamp)
             )
             is PaymentResult.UserAbandonedPayment -> sendEvent(
                 "onUserPaymentAbandoned",
