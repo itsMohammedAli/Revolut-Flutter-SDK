@@ -12,12 +12,6 @@ class NativeEventDispatcher {
     final data = Map<String, dynamic>.from(event.data);
     try {
       switch (methodName) {
-        case 'onEventChannelReady':
-          debugPrint('✅ Event channel is ready: $data');
-          break;
-        case 'printHello':
-          debugPrint('👋 Print hello: $data');
-          break;
         case 'onOrderCompleted':
           debugPrint('🎉 ORDER COMPLETED: $data');
           callbacks.handleOrderCompleted(data);

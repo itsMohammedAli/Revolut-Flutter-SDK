@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../generated/revolut_api.g.dart';
 import '../../models/revolut_pay_models.dart';
-import '../../platform/legacy_converters.dart';
+import '../../platform/message_mappers.dart';
 import '../../platform/revolut_transport.dart';
 
 /// A Flutter widget that displays a Revolut Pay button using the native Android SDK

@@ -1,6 +1,7 @@
 package com.revolutpay.flutter
 
 import com.revolutpay.flutter.generated.FlutterError
+import com.revolutpay.flutter.generated.InitializationRequest
 import com.revolutpay.flutter.generated.PaymentRequest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,9 +9,9 @@ import kotlin.test.assertFailsWith
 
 internal class RevolutSdkBridgePluginTest {
     @Test
-    fun unsupportedControllerHasStructuredError() {
-        val error = assertFailsWith<FlutterError> { RevolutSdkBridgePlugin().createController() }
-        assertEquals("UNSUPPORTED", error.code)
+    fun emptyMerchantKeyHasStructuredError() {
+        val error = assertFailsWith<FlutterError> { RevolutSdkBridgePlugin().initialize(InitializationRequest("", "sandbox")) }
+        assertEquals("INVALID_ARGUMENTS", error.code)
     }
 
     @Test

@@ -19,11 +19,4 @@ abstract interface class RevolutPlatform {
   });
   Future<String> getPlatformVersion();
   Future<Map<String, dynamic>> getSdkVersion();
-  Future<bool> cleanupButton(int viewId);
-  Future<bool> cleanupAllButtons();
-  Future<Map<String, dynamic>> createController();
-  Future<bool> disposeController(String controllerId);
-  Future<bool> continueConfirmationFlow(String controllerId);
-  Future<bool> setOrderToken(String controllerId, String orderToken);
-  Future<bool> setSavePaymentMethodForMerchant(String controllerId, bool save);
 }

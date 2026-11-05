@@ -7,12 +7,27 @@ class RevolutTransport implements RevolutFlutterApi {
   static final RevolutTransport instance = RevolutTransport._();
   final RevolutHostApi host = RevolutHostApi();
   bool _registered = false;
-  bool initialized = false;
-  bool get callbacksRegistered => _registered;
   final Map<int, void Function(NativePaymentResult)> _buttons = {};
   final Set<void Function(NativeEvent)> _events = {};
-  void Function(NativeLogEntry)? logListener;
-  void Function(NativePaymentResult)? paymentListener;
+  final Set<void Function(NativeLogEntry)> _logs = {};
+  final Set<void Function(NativePaymentResult)> _payments = {};
+
+  void addSdkListeners({
+    required void Function(NativeLogEntry) onLog,
+    required void Function(NativePaymentResult) onPayment,
+  }) {
+    ensureRegistered();
+    _logs.add(onLog);
+    _payments.add(onPayment);
+  }
+
+  void removeSdkListeners({
+    required void Function(NativeLogEntry) onLog,
+    required void Function(NativePaymentResult) onPayment,
+  }) {
+    _logs.remove(onLog);
+    _payments.remove(onPayment);
+  }
 
   void ensureRegistered() {
     if (_registered) return;
@@ -38,7 +53,9 @@ class RevolutTransport implements RevolutFlutterApi {
   Future<void> onPaymentResult(NativePaymentResult result) async {
     final id = result.viewId;
     if (id == null) {
-      paymentListener?.call(result);
+      for (final listener in List.of(_payments)) {
+        listener(result);
+      }
     } else {
       _buttons[id]?.call(result);
     }
@@ -46,7 +63,9 @@ class RevolutTransport implements RevolutFlutterApi {
 
   @override
   Future<void> onLog(NativeLogEntry entry) async {
-    logListener?.call(entry);
+    for (final listener in List.of(_logs)) {
+      listener(entry);
+    }
   }
 
   @override

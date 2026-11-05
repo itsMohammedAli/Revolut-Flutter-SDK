@@ -19,10 +19,6 @@ extension SdkInfoMap on SdkInfo {
   };
 }
 
-extension PaymentStartedMap on PaymentStarted {
-  Map<String, dynamic> toMap() => {'status': status, 'orderToken': orderToken};
-}
-
 extension ButtonCreatedMap on ButtonCreated {
   Map<String, dynamic> toMap() => {
     'buttonCreated': true,

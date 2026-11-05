@@ -295,17 +295,6 @@ public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin, FlutterSceneLifeCy
         return PaymentStarted(status: "initiated", orderToken: orderToken)
     }
 
-    private func unsupported(_ method: String) -> PigeonError {
-        PigeonError(code: "UNSUPPORTED", message: "\(method) is not supported by this native SDK. Use the payment widgets or pay().", details: nil)
-    }
-    func createController() throws -> [String: Any?] { throw unsupported("createController") }
-    func disposeController(controllerId: String) throws -> Bool { throw unsupported("disposeController") }
-    func continueConfirmationFlow(controllerId: String) throws -> Bool { throw unsupported("continueConfirmationFlow") }
-    func setOrderToken(controllerId: String, orderToken: String) throws -> Bool { throw unsupported("setOrderToken") }
-    func setSavePaymentMethodForMerchant(controllerId: String, save: Bool) throws -> Bool { throw unsupported("setSavePaymentMethodForMerchant") }
-    func provideButton(params: [String: Any?]?) throws -> [String: Any?] { throw unsupported("provideButton") }
-    func providePromotionalBannerWidget(params: [String: Any?]?, themeId: String?) throws -> [String: Any?] { throw unsupported("providePromotionalBannerWidget") }
-
     public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
         RevolutHostApiSetup.setUp(binaryMessenger: registrar.messenger(), api: nil)
         releaseAllButtons()

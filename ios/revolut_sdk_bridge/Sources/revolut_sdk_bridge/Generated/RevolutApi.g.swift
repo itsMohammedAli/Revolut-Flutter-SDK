@@ -723,13 +723,6 @@ protocol RevolutHostApi {
   func createButton(request: ButtonRequest) throws -> ButtonCreated
   func cleanupButton(viewId: Int64) throws -> Bool
   func cleanupAllButtons() throws -> Bool
-  func createController() throws -> [String: Any?]
-  func disposeController(controllerId: String) throws -> Bool
-  func continueConfirmationFlow(controllerId: String) throws -> Bool
-  func setOrderToken(controllerId: String, orderToken: String) throws -> Bool
-  func setSavePaymentMethodForMerchant(controllerId: String, save: Bool) throws -> Bool
-  func provideButton(params: [String: Any?]?) throws -> [String: Any?]
-  func providePromotionalBannerWidget(params: [String: Any?]?, themeId: String?) throws -> [String: Any?]
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -836,112 +829,6 @@ class RevolutHostApiSetup {
       }
     } else {
       cleanupAllButtonsChannel.setMessageHandler(nil)
-    }
-    let createControllerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.createController\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      createControllerChannel.setMessageHandler { _, reply in
-        do {
-          let result = try api.createController()
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      createControllerChannel.setMessageHandler(nil)
-    }
-    let disposeControllerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.disposeController\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      disposeControllerChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let controllerIdArg = args[0] as! String
-        do {
-          let result = try api.disposeController(controllerId: controllerIdArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      disposeControllerChannel.setMessageHandler(nil)
-    }
-    let continueConfirmationFlowChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.continueConfirmationFlow\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      continueConfirmationFlowChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let controllerIdArg = args[0] as! String
-        do {
-          let result = try api.continueConfirmationFlow(controllerId: controllerIdArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      continueConfirmationFlowChannel.setMessageHandler(nil)
-    }
-    let setOrderTokenChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.setOrderToken\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      setOrderTokenChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let controllerIdArg = args[0] as! String
-        let orderTokenArg = args[1] as! String
-        do {
-          let result = try api.setOrderToken(controllerId: controllerIdArg, orderToken: orderTokenArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      setOrderTokenChannel.setMessageHandler(nil)
-    }
-    let setSavePaymentMethodForMerchantChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.setSavePaymentMethodForMerchant\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      setSavePaymentMethodForMerchantChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let controllerIdArg = args[0] as! String
-        let saveArg = args[1] as! Bool
-        do {
-          let result = try api.setSavePaymentMethodForMerchant(controllerId: controllerIdArg, save: saveArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      setSavePaymentMethodForMerchantChannel.setMessageHandler(nil)
-    }
-    let provideButtonChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.provideButton\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      provideButtonChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let paramsArg: [String: Any?]? = nilOrValue(args[0])
-        do {
-          let result = try api.provideButton(params: paramsArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      provideButtonChannel.setMessageHandler(nil)
-    }
-    let providePromotionalBannerWidgetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.revolut_sdk_bridge.RevolutHostApi.providePromotionalBannerWidget\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      providePromotionalBannerWidgetChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let paramsArg: [String: Any?]? = nilOrValue(args[0])
-        let themeIdArg: String? = nilOrValue(args[1])
-        do {
-          let result = try api.providePromotionalBannerWidget(params: paramsArg, themeId: themeIdArg)
-          reply(wrapResult(result))
-        } catch {
-          reply(wrapError(error))
-        }
-      }
-    } else {
-      providePromotionalBannerWidgetChannel.setMessageHandler(nil)
     }
   }
 }

@@ -1,3 +1,4 @@
+import '../models/ios_button_config.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/revolut_pay_models.dart';
@@ -103,7 +104,7 @@ class CrossPlatformRevolutPayButton extends StatelessWidget {
     } else if (Platform.isIOS) {
       // Use iOS implementation
       return ios.RevolutPayButtonIos(
-        config: ios.RevolutPayButtonConfigIos(
+        config: RevolutPayButtonConfigIos(
           orderToken: orderToken,
           amount: amount,
           currency: currency,

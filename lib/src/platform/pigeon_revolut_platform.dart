@@ -1,9 +1,10 @@
+import '../models/callback_models.dart';
 import 'package:flutter/services.dart';
 import '../callbacks/native_event_dispatcher.dart';
 import '../callbacks/revolut_callbacks.dart';
 import '../generated/revolut_api.g.dart';
 import '../models/revolut_sdk_exception.dart';
-import 'legacy_converters.dart';
+import 'message_mappers.dart';
 import 'revolut_platform.dart';
 import 'revolut_transport.dart';
 
@@ -40,7 +41,7 @@ class PigeonRevolutPlatform implements RevolutPlatform {
   @override
   void ensureCallbacks() {
     _checkSupported();
-    _transport.ensureRegistered();
+    _transport.addSdkListeners(onLog: _onLog, onPayment: _onPayment);
     if (type == RevolutPlatformType.android) {
       _transport.addEventListener(_dispatcher.handleEvent);
     }
@@ -52,8 +53,20 @@ class PigeonRevolutPlatform implements RevolutPlatform {
     if (_listening && type == RevolutPlatformType.android) {
       _transport.removeEventListener(_dispatcher.handleEvent);
     }
+    _transport.removeSdkListeners(onLog: _onLog, onPayment: _onPayment);
     _listening = false;
   }
+
+  void _onLog(NativeLogEntry entry) => callbacks.onLog?.call(
+    RevolutLogEntry.fromMap({
+      'level': entry.level,
+      'message': entry.message,
+      'timestamp': entry.timestamp,
+      'source': entry.source,
+    }),
+  );
+  void _onPayment(NativePaymentResult result) => callbacks.onPaymentResult
+      ?.call(RevolutPaymentResult.fromMap(result.toMap()));
 
   Future<T> _invoke<T>(Future<T> Function() operation) async {
     _checkSupported();
@@ -77,14 +90,12 @@ class PigeonRevolutPlatform implements RevolutPlatform {
     required String merchantPublicKey,
     String? environment,
   }) => _invoke(() async {
-    final initialized = await _host.initialize(
+    return _host.initialize(
       InitializationRequest(
         merchantPublicKey: merchantPublicKey,
         environment: environment,
       ),
     );
-    _transport.initialized = initialized;
-    return initialized;
   });
   @override
   Future<bool> processPayment({
@@ -110,27 +121,4 @@ class PigeonRevolutPlatform implements RevolutPlatform {
         'message': 'Revolut Pay SDK version information',
     },
   );
-  @override
-  Future<bool> cleanupButton(int viewId) =>
-      _invoke(() => _host.cleanupButton(viewId));
-  @override
-  Future<bool> cleanupAllButtons() => _invoke(_host.cleanupAllButtons);
-  @override
-  Future<Map<String, dynamic>> createController() => _invoke(
-    () async => Map<String, dynamic>.from(await _host.createController()),
-  );
-  @override
-  Future<bool> disposeController(String controllerId) =>
-      _invoke(() => _host.disposeController(controllerId));
-  @override
-  Future<bool> continueConfirmationFlow(String controllerId) =>
-      _invoke(() => _host.continueConfirmationFlow(controllerId));
-  @override
-  Future<bool> setOrderToken(String controllerId, String orderToken) =>
-      _invoke(() => _host.setOrderToken(controllerId, orderToken));
-  @override
-  Future<bool> setSavePaymentMethodForMerchant(
-    String controllerId,
-    bool save,
-  ) => _invoke(() => _host.setSavePaymentMethodForMerchant(controllerId, save));
 }

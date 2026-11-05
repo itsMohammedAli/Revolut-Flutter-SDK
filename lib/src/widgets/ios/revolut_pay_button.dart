@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../generated/revolut_api.g.dart';
 import '../../models/ios_button_config.dart';
-import '../../models/ios_callback_models.dart';
-import '../../platform/legacy_converters.dart';
+import '../../models/callback_models.dart';
+import '../../platform/message_mappers.dart';
 import '../../platform/native_button_controller.dart';
 import '../../platform/revolut_transport.dart';
-
-export '../../models/ios_button_config.dart';
 
 /// The Revolut Pay button widget
 class RevolutPayButtonIos extends StatefulWidget {
@@ -15,7 +13,7 @@ class RevolutPayButtonIos extends StatefulWidget {
   final RevolutPayButtonStyleIos? style;
   final Widget? loadingWidget;
   final Widget? placeholderWidget;
-  final Function(RevolutPaymentResultIos)? onPaymentResult;
+  final Function(RevolutPaymentResult)? onPaymentResult;
   final Function(String)? onPaymentError;
   final VoidCallback? onPaymentCancelled;
   final VoidCallback? onButtonCreated;
@@ -215,7 +213,7 @@ class _RevolutPayButtonIosState extends State<RevolutPayButtonIos> {
 
     if (success) {
       widget.onPaymentResult?.call(
-        RevolutPaymentResultIos(
+        RevolutPaymentResult(
           success: true,
           message: message,
           error: '',

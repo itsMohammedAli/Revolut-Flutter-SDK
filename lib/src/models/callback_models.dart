@@ -1,19 +1,19 @@
 /// Log entry from the native Revolut SDK
-class RevolutLogEntryIos {
-  final RevolutLogLevelIos level;
+class RevolutLogEntry {
+  final RevolutLogLevel level;
   final String message;
   final DateTime timestamp;
   final String source;
 
-  RevolutLogEntryIos({
+  RevolutLogEntry({
     required this.level,
     required this.message,
     required this.timestamp,
     required this.source,
   });
 
-  factory RevolutLogEntryIos.fromMap(Map<String, dynamic> map) {
-    return RevolutLogEntryIos(
+  factory RevolutLogEntry.fromMap(Map<String, dynamic> map) {
+    return RevolutLogEntry(
       level: _parseLogLevel(map['level'] as String?),
       message: map['message'] as String? ?? '',
       timestamp: DateTime.fromMillisecondsSinceEpoch(
@@ -28,40 +28,40 @@ class RevolutLogEntryIos {
     return '[${timestamp.toIso8601String()}] [$source] [${level.name.toUpperCase()}] $message';
   }
 
-  static RevolutLogLevelIos _parseLogLevel(String? level) {
+  static RevolutLogLevel _parseLogLevel(String? level) {
     switch (level?.toLowerCase()) {
       case 'success':
-        return RevolutLogLevelIos.success;
+        return RevolutLogLevel.success;
       case 'warning':
-        return RevolutLogLevelIos.warning;
+        return RevolutLogLevel.warning;
       case 'error':
-        return RevolutLogLevelIos.error;
+        return RevolutLogLevel.error;
       case 'info':
       default:
-        return RevolutLogLevelIos.info;
+        return RevolutLogLevel.info;
     }
   }
 }
 
 /// Log levels for Revolut SDK operations
-enum RevolutLogLevelIos { info, success, warning, error }
+enum RevolutLogLevel { info, success, warning, error }
 
 /// Payment result from the native Revolut SDK
-class RevolutPaymentResultIos {
+class RevolutPaymentResult {
   final bool success;
   final String message;
   final String error;
   final DateTime timestamp;
 
-  RevolutPaymentResultIos({
+  RevolutPaymentResult({
     required this.success,
     required this.message,
     required this.error,
     required this.timestamp,
   });
 
-  factory RevolutPaymentResultIos.fromMap(Map<String, dynamic> map) {
-    return RevolutPaymentResultIos(
+  factory RevolutPaymentResult.fromMap(Map<String, dynamic> map) {
+    return RevolutPaymentResult(
       success: map['success'] as bool? ?? false,
       message: map['message'] as String? ?? '',
       error: map['error'] as String? ?? '',

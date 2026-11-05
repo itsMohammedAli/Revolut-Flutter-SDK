@@ -8,21 +8,18 @@ independent of the generated classes.
 ## Ownership
 
 - `api/`: the public facade delegates SDK operations to `RevolutPlatform`. It does
-  not import Android/iOS compatibility implementations or generated messages.
+  not import platform-specific implementations or generated messages.
 - `platform/`: `RevolutPlatform` defines the facade contract; the factory chooses
   the runtime platform, and `PigeonRevolutPlatform` implements the contract with
   the generated host API. `NativeButtonController` handles iOS view creation.
 - `callbacks/`: services expose application callbacks; the event dispatcher maps
   extensible native events to those callbacks.
-- `models/`: shared parameters, result data, enums, and SDK errors. Platform-specific
-  iOS model names remain to preserve source compatibility.
+- `models/`: shared parameters, payment results, log entries, enums, and SDK errors.
+  Configuration used only by the internal iOS native view stays internal.
 - `widgets/`: cross-platform widgets choose a native view. Android button and
   banner widgets have separate state; iOS button configuration is a model.
 - `generated/`: generated transport definitions only. Edit `pigeons/revolut_api.dart`
   and run `bash tool/generate_pigeon.sh` to update every language together.
-- `compatibility/`: historical platform interfaces and adapters. Current code does
-  not depend on these modules; old public import paths re-export their original
-  types rather than defining duplicate copies.
 
 ## Lifecycles
 
@@ -39,14 +36,19 @@ and SDK operations. View code and payment option parsing live in separate files.
 The Swift plugin handles registration, deep links, and SDK operations, while
 callback delivery, view factories, views, and shared helpers have their own files.
 
-## Compatibility and tests
+## Public API and tests
 
-The main entry point keeps the historical exports available. New code should use
-`RevolutSdkBridge`, the cross-platform widgets, and shared public models. Legacy
-controller methods still return the native SDK's `UNSUPPORTED` errors.
+`lib/revolut_sdk_bridge.dart` is the only public entry point. It exports the SDK
+facade, cross-platform widgets, shared models, callback container, and SDK errors.
+There are no legacy barrels, MethodChannel aliases, forwarding files, or exported
+platform adapters. Unsupported controller APIs and their data types are removed
+from Dart, Pigeon, Kotlin, and Swift.
+
+Application callbacks belong to the SDK instance; disposing it unregisters its
+payment, log, and Android event listeners without removing widget listeners.
 
 The facade can receive a platform implementation through its testing constructor;
-the Pigeon adapter can receive a generated host API. Tests verify the real generated
-codec, error envelopes, callback routing, disposal/reinitialization, unsupported
-platforms, and legacy import paths. Native builds verify the split sources and
-both iOS dependency managers. Real payment outcomes require merchant sandbox tests.
+the Pigeon adapter can receive a generated host API. Tests verify the generated
+codec, error envelopes, callback routing, disposal/reinitialization, and unsupported
+platforms. Native builds verify both iOS dependency managers and Android compilation.
+Real payment outcomes require merchant sandbox tests.

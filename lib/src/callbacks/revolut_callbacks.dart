@@ -1,3 +1,4 @@
+import '../models/callback_models.dart';
 import '../models/revolut_pay_models.dart';
 
 typedef BannerInteractionCallback =
@@ -48,6 +49,11 @@ typedef UserPaymentAbandonedCallback = void Function(OrderResultData result);
 
 /// Service class that manages all Revolut Pay SDK callbacks
 class RevolutCallbacks {
+  /// Payment outcomes for custom-button payments.
+  void Function(RevolutPaymentResult)? onPaymentResult;
+
+  /// Native SDK diagnostic messages.
+  void Function(RevolutLogEntry)? onLog;
   OrderCompletedCallback? onOrderCompleted;
   OrderFailedCallback? onOrderFailed;
   UserPaymentAbandonedCallback? onUserPaymentAbandoned;
@@ -66,6 +72,8 @@ class RevolutCallbacks {
 
   /// Clears all callbacks
   void clearCallbacks() {
+    onPaymentResult = null;
+    onLog = null;
     onOrderCompleted = null;
     onOrderFailed = null;
     onUserPaymentAbandoned = null;

@@ -39,15 +39,6 @@ enum ButtonVariant {
   const ButtonVariant(this.value);
 }
 
-/// Country code options
-enum RevolutCountryCode {
-  gb('GB'),
-  us('US');
-
-  final String value;
-  const RevolutCountryCode(this.value);
-}
-
 /// Currency options for promotional banners
 enum RevolutCurrency {
   gbp('GBP'),
@@ -56,13 +47,4 @@ enum RevolutCurrency {
 
   final String value;
   const RevolutCurrency(this.value);
-}
-
-/// Environment enum for SDK initialization
-enum RevolutEnvironment {
-  sandbox('SANDBOX'),
-  main('MAIN');
-
-  final String value;
-  const RevolutEnvironment(this.value);
 }

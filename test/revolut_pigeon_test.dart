@@ -1,16 +1,11 @@
-import 'package:revolut_sdk_bridge/revolut_sdk_bridge.dart'
-    show RevolutSdkBridge;
-import 'package:revolut_sdk_bridge/src/platform/pigeon_revolut_platform.dart';
-import 'package:revolut_sdk_bridge/src/platform/revolut_platform.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revolut_sdk_bridge/android/revolut_sdk_bridge_method_channel.dart';
-import 'package:revolut_sdk_bridge/android/services/revolut_callbacks.dart';
-import 'package:revolut_sdk_bridge/ios/revolut_sdk_bridge_method_channel.dart'
-    as ios;
-import 'package:revolut_sdk_bridge/ios/services/revolut_callbacks.dart';
-import 'package:revolut_sdk_bridge/revolut_sdk_bridge_method_channel.dart';
+import 'package:revolut_sdk_bridge/revolut_sdk_bridge.dart';
+import 'package:revolut_sdk_bridge/src/platform/pigeon_revolut_platform.dart';
+import 'package:revolut_sdk_bridge/src/platform/revolut_platform.dart';
+import 'package:revolut_sdk_bridge/src/platform/native_button_controller.dart';
+import 'package:revolut_sdk_bridge/src/platform/message_mappers.dart';
 import 'package:revolut_sdk_bridge/src/generated/revolut_api.g.dart';
 import 'package:revolut_sdk_bridge/src/platform/revolut_transport.dart';
 
@@ -50,16 +45,17 @@ void main() {
       messenger.setMockMessageHandler(name, null);
     }
     mockedChannels.clear();
-    RevolutCallbacksIos.dispose();
   });
 
-  test(
-    'legacy platform version API uses the generated host protocol',
-    () async {
-      mockHost('getPlatformVersion', (_) => ['42']);
-      expect(await MethodChannelRevolutSdkBridge().getPlatformVersion(), '42');
-    },
-  );
+  test('platform version API uses the generated host protocol', () async {
+    mockHost('getPlatformVersion', (_) => ['42']);
+    expect(
+      await PigeonRevolutPlatform(
+        type: RevolutPlatformType.android,
+      ).getPlatformVersion(),
+      '42',
+    );
+  });
 
   test(
     'initialization and payment use typed requests across separate adapters',
@@ -78,20 +74,20 @@ void main() {
           PaymentStarted(status: 'initiated', orderToken: request.orderToken),
         ];
       });
-      final first = RevolutSdkBridgeMethodChannel(RevolutCallbacks());
-      final second = RevolutSdkBridgeMethodChannel(RevolutCallbacks());
+      final first = PigeonRevolutPlatform(type: RevolutPlatformType.android);
+      final second = PigeonRevolutPlatform(type: RevolutPlatformType.android);
       addTearDown(first.dispose);
       addTearDown(second.dispose);
       expect(
-        await first.init(
+        await first.initialize(
           environment: 'sandbox',
           merchantPublicKey: 'public-key',
         ),
         isTrue,
       );
-      expect(second.isInitialized, isTrue);
+
       expect(
-        await second.pay(
+        await second.processPayment(
           orderToken: 'order-token',
           savePaymentMethodForMerchant: true,
         ),
@@ -111,10 +107,10 @@ void main() {
           {'reason': 'missing-key'},
         ],
       );
-      final android = RevolutSdkBridgeMethodChannel(RevolutCallbacks());
+      final android = PigeonRevolutPlatform(type: RevolutPlatformType.android);
       addTearDown(android.dispose);
       await expectLater(
-        android.pay(orderToken: 'token'),
+        android.processPayment(orderToken: 'token'),
         throwsA(
           isA<PlatformException>().having(
             (e) => e.code,
@@ -123,10 +119,12 @@ void main() {
           ),
         ),
       );
+      final ios = PigeonRevolutPlatform(type: RevolutPlatformType.ios);
+      addTearDown(ios.dispose);
       await expectLater(
-        ios.MethodChannelRevolutSdkBridge().payIos(orderToken: 'token'),
+        ios.processPayment(orderToken: 'token'),
         throwsA(
-          isA<ios.RevolutSdkException>().having(
+          isA<RevolutSdkException>().having(
             (e) => e.code,
             'code',
             'NOT_INITIALIZED',
@@ -145,20 +143,23 @@ void main() {
         expect(request.additionalData?['nested'], {'count': 2});
         return [ButtonCreated(viewId: 7, request: request)];
       });
-      final config = await ios.MethodChannelRevolutSdkBridge()
-          .createRevolutPayButtonIos(
-            orderToken: 'token',
-            amount: 1500,
-            currency: 'EUR',
-            email: 'buyer@example.com',
-            additionalData: {
-              'nested': {'count': 2},
-            },
-          );
-      expect(config?['viewId'], 7);
-      expect(config?['buttonCreated'], isTrue);
-      expect(config?['returnURL'], 'revolut-sdk-bridge://revolut-pay');
-      expect(config?['additionalData'], {
+      final config = (await NativeButtonController().create(
+        ButtonRequest(
+          orderToken: 'token',
+          amount: 1500,
+          currency: 'EUR',
+          email: 'buyer@example.com',
+          shouldRequestShipping: false,
+          savePaymentMethodForMerchant: false,
+          additionalData: {
+            'nested': {'count': 2},
+          },
+        ),
+      )).toMap();
+      expect(config['viewId'], 7);
+      expect(config['buttonCreated'], isTrue);
+      expect(config['returnURL'], 'revolut-sdk-bridge://revolut-pay');
+      expect(config['additionalData'], {
         'nested': {'count': 2},
       });
     },
@@ -198,9 +199,12 @@ void main() {
     () async {
       var count = 0;
       final callbacks = RevolutCallbacks()..onOrderCompleted = (_) => count++;
-      final adapter = RevolutSdkBridgeMethodChannel(callbacks);
-      adapter.ensureEventChannelReady();
-      adapter.ensureEventChannelReady();
+      final adapter = PigeonRevolutPlatform(
+        type: RevolutPlatformType.android,
+        callbacks: callbacks,
+      );
+      adapter.ensureCallbacks();
+      adapter.ensureCallbacks();
       await nativeCallback(
         'onEvent',
         NativeEvent(name: 'onOrderCompleted', data: {'success': true}),
@@ -215,52 +219,33 @@ void main() {
     },
   );
 
-  test(
-    'disposing global iOS callbacks leaves button callbacks active',
-    () async {
-      var global = 0;
-      var button = 0;
-      RevolutCallbacksIos.onPaymentResult = (_) => global++;
-      RevolutCallbacksIos.initialize();
-      final transport = RevolutTransport.instance;
-      transport.addButtonListener(99, (_) => button++);
-      addTearDown(() {
-        transport.removeButtonListener(99);
-        RevolutCallbacksIos.onPaymentResult = null;
-      });
-      final result = NativePaymentResult(
-        success: true,
-        message: 'Paid',
-        error: '',
-        timestamp: 123,
-      );
-      await nativeCallback('onPaymentResult', result);
-      expect(global, 1);
-      RevolutCallbacksIos.dispose();
-      result.viewId = 99;
-      await nativeCallback('onPaymentResult', result);
-      expect(button, 1);
-      expect(global, 1);
-    },
-  );
+  test('disposing SDK listeners leaves button callbacks active', () async {
+    var global = 0;
+    var button = 0;
+    final sdk = PigeonRevolutPlatform(type: RevolutPlatformType.ios);
+    sdk.callbacks.onPaymentResult = (_) => global++;
+    sdk.ensureCallbacks();
+    final transport = RevolutTransport.instance;
+    transport.addButtonListener(99, (_) => button++);
+    addTearDown(() {
+      sdk.dispose();
+      transport.removeButtonListener(99);
+    });
+    final result = NativePaymentResult(
+      success: true,
+      message: 'Paid',
+      error: '',
+      timestamp: 123,
+    );
+    await nativeCallback('onPaymentResult', result);
+    expect(global, 1);
+    sdk.dispose();
+    result.viewId = 99;
+    await nativeCallback('onPaymentResult', result);
+    expect(button, 1);
+    expect(global, 1);
+  });
 
-  test(
-    'unsupported controller operations retain structured native errors',
-    () async {
-      mockHost(
-        'createController',
-        (_) => ['UNSUPPORTED', 'Use the widget', null],
-      );
-      final adapter = RevolutSdkBridgeMethodChannel(RevolutCallbacks());
-      addTearDown(adapter.dispose);
-      await expectLater(
-        adapter.createController(),
-        throwsA(
-          isA<PlatformException>().having((e) => e.code, 'code', 'UNSUPPORTED'),
-        ),
-      );
-    },
-  );
   test(
     'shared platform routes facade payment and callbacks across disposal/reinitialization',
     () async {
@@ -275,10 +260,10 @@ void main() {
       final platform = PigeonRevolutPlatform(type: RevolutPlatformType.android);
       final sdk = RevolutSdkBridge.withPlatform(platform);
       sdk.callbacks.onOrderCompleted = (_) => count++;
-      expect(sdk.isEventChannelReady, isFalse);
+      expect(sdk.callbacksRegistered, isFalse);
       await sdk.initialize(merchantPublicKey: 'key', environment: 'sandbox');
       expect(await sdk.processPayment(orderToken: 'token'), isTrue);
-      expect(sdk.isEventChannelReady, isTrue);
+      expect(sdk.callbacksRegistered, isTrue);
       final event = NativeEvent(
         name: 'onOrderCompleted',
         data: {'success': true},
@@ -286,7 +271,7 @@ void main() {
       await nativeCallback('onEvent', event);
       expect(count, 1);
       sdk.dispose();
-      expect(sdk.isEventChannelReady, isFalse);
+      expect(sdk.callbacksRegistered, isFalse);
       await nativeCallback('onEvent', event);
       expect(count, 1);
       await sdk.initialize(merchantPublicKey: 'key');
@@ -298,7 +283,7 @@ void main() {
   );
 
   test(
-    'shared iOS facade preserves structured errors and does not claim Android readiness',
+    'shared iOS facade preserves structured errors and registers callbacks',
     () async {
       mockHost('pay', (_) => ['NOT_INITIALIZED', 'Initialize first', null]);
       final platform = PigeonRevolutPlatform(type: RevolutPlatformType.ios);
@@ -307,7 +292,7 @@ void main() {
       await expectLater(
         sdk.processPayment(orderToken: 'token'),
         throwsA(
-          isA<ios.RevolutSdkException>().having(
+          isA<RevolutSdkException>().having(
             (error) => error.code,
             'code',
             'NOT_INITIALIZED',
@@ -315,7 +300,7 @@ void main() {
         ),
       );
       expect(sdk.isIOS, isTrue);
-      expect(sdk.isEventChannelReady, isFalse);
+      expect(sdk.callbacksRegistered, isTrue);
     },
   );
 
@@ -340,7 +325,44 @@ void main() {
         'platform': 'unknown',
         'isAndroid': false,
         'isIOS': false,
+        'callbacksRegistered': false,
       });
     },
   );
+  test('SDK log and payment listeners are scoped to each instance', () async {
+    final first = PigeonRevolutPlatform(type: RevolutPlatformType.ios);
+    final second = PigeonRevolutPlatform(type: RevolutPlatformType.ios);
+    addTearDown(first.dispose);
+    addTearDown(second.dispose);
+    final logs = <String>[];
+    final payments = <String>[];
+    first.callbacks.onLog = (entry) => logs.add('first:${entry.message}');
+    second.callbacks.onLog = (entry) => logs.add('second:${entry.message}');
+    first.callbacks.onPaymentResult = (_) => payments.add('first');
+    second.callbacks.onPaymentResult = (_) => payments.add('second');
+    first.ensureCallbacks();
+    second.ensureCallbacks();
+    first.ensureCallbacks();
+    final log = NativeLogEntry(
+      level: 'INFO',
+      message: 'ready',
+      timestamp: 123,
+      source: 'test',
+    );
+    await nativeCallback('onLog', log);
+    expect(logs, ['first:ready', 'second:ready']);
+    first.dispose();
+    await nativeCallback(
+      'onPaymentResult',
+      NativePaymentResult(
+        success: true,
+        message: 'Paid',
+        error: '',
+        timestamp: 123,
+      ),
+    );
+    expect(payments, ['second']);
+    await nativeCallback('onLog', log);
+    expect(logs, ['first:ready', 'second:ready', 'second:ready']);
+  });
 }

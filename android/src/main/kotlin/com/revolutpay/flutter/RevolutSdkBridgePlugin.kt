@@ -234,6 +234,13 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
     }
 
     private fun handleOneShotPaymentResult(paymentResult: PaymentResult) {
+        val timestamp = System.currentTimeMillis()
+        val result = when (paymentResult) {
+            PaymentResult.Success -> NativePaymentResult(true, "Payment completed successfully", "", timestamp)
+            is PaymentResult.UserAbandonedPayment -> NativePaymentResult(false, "Payment abandoned by user", "user_abandoned_payment", timestamp)
+            is PaymentResult.Failure -> NativePaymentResult(false, "Payment failed", paymentResult.exception.message ?: "payment_failure", timestamp)
+        }
+        sendPaymentResultToDart(result)
         when (paymentResult) {
             PaymentResult.Success -> sendEvent(
                 "onOrderCompleted",
@@ -255,17 +262,8 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
         }
     }
 
-    private fun unsupported(method: String): Nothing = throw FlutterError(
-        "UNSUPPORTED", "$method is not supported by this native SDK. Use the payment widgets or pay().", null)
-
-    override fun createController(): Map<String, Any?> = unsupported("createController")
-    override fun disposeController(controllerId: String): Boolean = unsupported("disposeController")
-    override fun continueConfirmationFlow(controllerId: String): Boolean = unsupported("continueConfirmationFlow")
-    override fun setOrderToken(controllerId: String, orderToken: String): Boolean = unsupported("setOrderToken")
-    override fun setSavePaymentMethodForMerchant(controllerId: String, save: Boolean): Boolean = unsupported("setSavePaymentMethodForMerchant")
-    override fun provideButton(params: Map<String, Any?>?): Map<String, Any?> = unsupported("provideButton")
-    override fun providePromotionalBannerWidget(params: Map<String, Any?>?, themeId: String?): Map<String, Any?> = unsupported("providePromotionalBannerWidget")
-    override fun createButton(request: ButtonRequest): ButtonCreated = unsupported("createButton; use the Android platform view")
+    override fun createButton(request: ButtonRequest): ButtonCreated = throw FlutterError(
+        "UNSUPPORTED", "Use the Android payment widget to create a native button.", null)
     override fun cleanupButton(viewId: Long): Boolean = true
     override fun cleanupAllButtons(): Boolean = true
 
@@ -286,7 +284,7 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
         }
     }
 
-    fun sendButtonPaymentResult(result: NativePaymentResult) {
+    fun sendPaymentResultToDart(result: NativePaymentResult) {
         callbacks?.onPaymentResult(result) { response ->
             response.exceptionOrNull()?.let { android.util.Log.w(TAG, "Failed to send payment result", it) }
         }

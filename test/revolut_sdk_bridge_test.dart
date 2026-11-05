@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revolut_sdk_bridge/android/enums/revolut_enums.dart';
-import 'package:revolut_sdk_bridge/android/models/revolut_pay_models.dart';
+import 'package:revolut_sdk_bridge/revolut_sdk_bridge.dart';
 
 void main() {
   group('ButtonParamsData', () {
@@ -61,30 +60,6 @@ void main() {
       expect(result.orderId, isNull);
       expect(result.error, 'boom');
       expect(result.cause, 'network');
-    });
-  });
-
-  group('SdkInitData', () {
-    test('fromMap resolves environment by wire value', () {
-      final sandbox = SdkInitData.fromMap({
-        'environment': 'SANDBOX',
-        'returnUri': 'app://pay',
-        'merchantPublicKey': 'pk_test',
-      });
-      final main = SdkInitData.fromMap({
-        'environment': 'MAIN',
-        'returnUri': 'app://pay',
-        'merchantPublicKey': 'pk_live',
-      });
-      final unknown = SdkInitData.fromMap({
-        'environment': 'whatever',
-        'returnUri': 'app://pay',
-        'merchantPublicKey': 'pk',
-      });
-
-      expect(sandbox.environment, RevolutEnvironment.sandbox);
-      expect(main.environment, RevolutEnvironment.main);
-      expect(unknown.environment, RevolutEnvironment.sandbox);
     });
   });
 }

@@ -125,18 +125,6 @@ abstract class RevolutHostApi {
   ButtonCreated createButton(ButtonRequest request);
   bool cleanupButton(int viewId);
   bool cleanupAllButtons();
-
-  // Compatibility operations: native SDKs report UNSUPPORTED for these.
-  Map<String, Object?> createController();
-  bool disposeController(String controllerId);
-  bool continueConfirmationFlow(String controllerId);
-  bool setOrderToken(String controllerId, String orderToken);
-  bool setSavePaymentMethodForMerchant(String controllerId, bool save);
-  Map<String, Object?> provideButton(Map<String, Object?>? params);
-  Map<String, Object?> providePromotionalBannerWidget(
-    Map<String, Object?>? params,
-    String? themeId,
-  );
 }
 
 @FlutterApi()

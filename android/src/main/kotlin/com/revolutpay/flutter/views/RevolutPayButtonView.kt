@@ -221,7 +221,7 @@ class RevolutPayButtonView(
         // This prevents infinite loading states on errors
         revolutPayButton?.showBlockingLoading(false)
 
-        plugin.sendButtonPaymentResult(NativePaymentResult(
+        plugin.sendPaymentResultToDart(NativePaymentResult(
             success, message, error ?: "", System.currentTimeMillis(), viewId.toLong(), orderToken
         ))
 
