@@ -1,4 +1,7 @@
+import 'package:json_annotation/json_annotation.dart';
+
 /// Box text options for button customization
+@JsonEnum(valueField: 'value')
 enum BoxText {
   none('NONE'),
   getCashbackValue('GET_CASHBACK_VALUE'),
@@ -9,6 +12,7 @@ enum BoxText {
 }
 
 /// Button radius options
+@JsonEnum(valueField: 'value')
 enum ButtonRadius {
   none('NONE'),
   small('SMALL'),
@@ -20,6 +24,7 @@ enum ButtonRadius {
 }
 
 /// Button size options
+@JsonEnum(valueField: 'value')
 enum ButtonSize {
   extraSmall('EXTRA_SMALL'),
   small('SMALL'),
@@ -31,6 +36,7 @@ enum ButtonSize {
 }
 
 /// Button variant options
+@JsonEnum(valueField: 'value')
 enum ButtonVariant {
   light('LIGHT'),
   dark('DARK');
@@ -40,6 +46,7 @@ enum ButtonVariant {
 }
 
 /// Currency options for promotional banners
+@JsonEnum(valueField: 'value')
 enum RevolutCurrency {
   gbp('GBP'),
   eur('EUR'),

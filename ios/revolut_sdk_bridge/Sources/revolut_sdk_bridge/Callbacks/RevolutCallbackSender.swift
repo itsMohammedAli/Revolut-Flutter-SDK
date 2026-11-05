@@ -6,6 +6,7 @@ final class RevolutCallbackSender {
     private let api: RevolutFlutterApi
     init(messenger: FlutterBinaryMessenger) { api = RevolutFlutterApi(binaryMessenger: messenger) }
     func log(_ data: [String: Any]) {
+        #if DEBUG
         let entry = NativeLogEntry(level: data["level"] as? String ?? "INFO",
             message: data["message"] as? String ?? "",
             timestamp: Int64(data["timestamp"] as? Int ?? nowMillis()),
@@ -15,6 +16,7 @@ final class RevolutCallbackSender {
                 if case .failure(let error) = response { NSLog("Revolut log delivery failed: %@", String(describing: error)) }
             }
         }
+        #endif
     }
     func payment(_ data: [String: Any], viewId: Int64? = nil) {
         let result = NativePaymentResult(success: data["success"] as? Bool ?? false,
@@ -22,7 +24,9 @@ final class RevolutCallbackSender {
             timestamp: Int64(data["timestamp"] as? Int ?? nowMillis()), viewId: viewId)
         DispatchQueue.main.async { [api] in
             api.onPaymentResult(result: result) { response in
+                #if DEBUG
                 if case .failure(let error) = response { NSLog("Revolut payment delivery failed: %@", String(describing: error)) }
+                #endif
             }
         }
     }

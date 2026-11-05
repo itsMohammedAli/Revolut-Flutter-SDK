@@ -1,41 +1,24 @@
-/// Configuration for the Revolut Pay button
-class RevolutPayButtonConfigIos {
-  final String orderToken;
-  final int amount;
-  final String currency;
-  final String email;
-  final bool shouldRequestShipping;
-  final bool savePaymentMethodForMerchant;
-  final String? returnURL;
-  final String? merchantName;
-  final String? merchantLogoURL;
-  final Map<String, dynamic>? additionalData;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const RevolutPayButtonConfigIos({
-    required this.orderToken,
-    required this.amount,
-    required this.currency,
-    required this.email,
-    this.shouldRequestShipping = false,
-    this.savePaymentMethodForMerchant = false,
-    this.returnURL,
-    this.merchantName,
-    this.merchantLogoURL,
-    this.additionalData,
-  });
+part 'ios_button_config.freezed.dart';
+part 'ios_button_config.g.dart';
 
-  Map<String, dynamic> toMap() {
-    return {
-      'orderToken': orderToken,
-      'amount': amount,
-      'currency': currency,
-      'email': email,
-      'shouldRequestShipping': shouldRequestShipping,
-      'savePaymentMethodForMerchant': savePaymentMethodForMerchant,
-      'returnURL': returnURL,
-      'merchantName': merchantName,
-      'merchantLogoURL': merchantLogoURL,
-      'additionalData': additionalData,
-    };
-  }
+@freezed
+abstract class RevolutPayButtonConfigIos with _$RevolutPayButtonConfigIos {
+  const RevolutPayButtonConfigIos._();
+  const factory RevolutPayButtonConfigIos({
+    required String orderToken,
+    required int amount,
+    required String currency,
+    required String email,
+    @Default(false) bool shouldRequestShipping,
+    @Default(false) bool savePaymentMethodForMerchant,
+    String? returnURL,
+    String? merchantName,
+    String? merchantLogoURL,
+    Map<String, dynamic>? additionalData,
+  }) = _RevolutPayButtonConfigIos;
+  factory RevolutPayButtonConfigIos.fromJson(Map<String, dynamic> json) =>
+      _$RevolutPayButtonConfigIosFromJson(json);
+  Map<String, dynamic> toMap() => toJson();
 }

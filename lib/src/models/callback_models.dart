@@ -1,82 +1,54 @@
-/// Log entry from the native Revolut SDK
-class RevolutLogEntry {
-  final RevolutLogLevel level;
-  final String message;
-  final DateTime timestamp;
-  final String source;
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'timestamp_converter.dart';
 
-  RevolutLogEntry({
-    required this.level,
-    required this.message,
-    required this.timestamp,
-    required this.source,
-  });
+part 'callback_models.freezed.dart';
+part 'callback_models.g.dart';
 
-  factory RevolutLogEntry.fromMap(Map<String, dynamic> map) {
-    return RevolutLogEntry(
-      level: _parseLogLevel(map['level'] as String?),
-      message: map['message'] as String? ?? '',
-      timestamp: DateTime.fromMillisecondsSinceEpoch(
-        ((map['timestamp'] as num?) ?? 0).toInt(),
-      ),
-      source: map['source'] as String? ?? 'Unknown',
-    );
-  }
-
+@freezed
+abstract class RevolutLogEntry with _$RevolutLogEntry {
+  const RevolutLogEntry._();
+  const factory RevolutLogEntry({
+    @JsonKey(fromJson: _logLevelFromJson, toJson: _logLevelToJson)
+    required RevolutLogLevel level,
+    @Default('') String message,
+    @EpochMillisecondsConverter() required DateTime timestamp,
+    @Default('Unknown') String source,
+  }) = _RevolutLogEntry;
+  factory RevolutLogEntry.fromJson(Map<String, dynamic> json) =>
+      _$RevolutLogEntryFromJson(json);
+  factory RevolutLogEntry.fromMap(Map<String, dynamic> map) =>
+      RevolutLogEntry.fromJson(map);
+  Map<String, dynamic> toMap() => toJson();
   @override
-  String toString() {
-    return '[${timestamp.toIso8601String()}] [$source] [${level.name.toUpperCase()}] $message';
-  }
-
-  static RevolutLogLevel _parseLogLevel(String? level) {
-    switch (level?.toLowerCase()) {
-      case 'success':
-        return RevolutLogLevel.success;
-      case 'warning':
-        return RevolutLogLevel.warning;
-      case 'error':
-        return RevolutLogLevel.error;
-      case 'info':
-      default:
-        return RevolutLogLevel.info;
-    }
-  }
+  String toString() =>
+      '[${timestamp.toIso8601String()}] [$source] [${level.name.toUpperCase()}] $message';
 }
 
-/// Log levels for Revolut SDK operations
 enum RevolutLogLevel { info, success, warning, error }
 
-/// Payment result from the native Revolut SDK
-class RevolutPaymentResult {
-  final bool success;
-  final String message;
-  final String error;
-  final DateTime timestamp;
-
-  RevolutPaymentResult({
-    required this.success,
-    required this.message,
-    required this.error,
-    required this.timestamp,
-  });
-
-  factory RevolutPaymentResult.fromMap(Map<String, dynamic> map) {
-    return RevolutPaymentResult(
-      success: map['success'] as bool? ?? false,
-      message: map['message'] as String? ?? '',
-      error: map['error'] as String? ?? '',
-      timestamp: DateTime.fromMillisecondsSinceEpoch(
-        ((map['timestamp'] as num?) ?? 0).toInt(),
-      ),
+RevolutLogLevel _logLevelFromJson(String? value) =>
+    RevolutLogLevel.values.firstWhere(
+      (level) => level.name == value?.toLowerCase(),
+      orElse: () => RevolutLogLevel.info,
     );
-  }
+String _logLevelToJson(RevolutLogLevel level) => level.name.toUpperCase();
 
+@freezed
+abstract class RevolutPaymentResult with _$RevolutPaymentResult {
+  const RevolutPaymentResult._();
+  const factory RevolutPaymentResult({
+    @Default(false) bool success,
+    @Default('') String message,
+    @Default('') String error,
+    @EpochMillisecondsConverter() required DateTime timestamp,
+  }) = _RevolutPaymentResult;
+  factory RevolutPaymentResult.fromJson(Map<String, dynamic> json) =>
+      _$RevolutPaymentResultFromJson(json);
+  factory RevolutPaymentResult.fromMap(Map<String, dynamic> map) =>
+      RevolutPaymentResult.fromJson(map);
+  Map<String, dynamic> toMap() => toJson();
   @override
-  String toString() {
-    if (success) {
-      return '[${timestamp.toIso8601String()}] SUCCESS: $message';
-    } else {
-      return '[${timestamp.toIso8601String()}] ERROR: $error';
-    }
-  }
+  String toString() => success
+      ? '[${timestamp.toIso8601String()}] SUCCESS: $message'
+      : '[${timestamp.toIso8601String()}] ERROR: $error';
 }

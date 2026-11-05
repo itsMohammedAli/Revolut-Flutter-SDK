@@ -1,5 +1,10 @@
 ## Unreleased
 
+- Restrict Dart and native diagnostics/log callbacks to debug builds.
+
+- Use Freezed and generated JSON serializers for data models, with value equality and copyWith.
+- Preserve native map keys, enum values, timestamp formats, and parsing defaults.
+
 ### Breaking cleanup
 
 - Keep a single public entry point and remove legacy forwarding files and platform exports.

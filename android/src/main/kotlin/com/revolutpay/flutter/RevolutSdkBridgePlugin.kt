@@ -1,5 +1,6 @@
 package com.revolutpay.flutter
 
+import com.revolutpay.flutter.support.DebugLogger
 import android.app.Activity
 import android.content.Context
 import android.net.Uri
@@ -269,7 +270,7 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
 
     private fun sendEvent(method: String, data: Map<String, Any>) {
         callbacks?.onEvent(NativeEvent(method, data)) { result ->
-            result.exceptionOrNull()?.let { android.util.Log.w(TAG, "Failed to send $method", it) }
+            result.exceptionOrNull()?.let { DebugLogger.w(TAG, "Failed to send $method", it) }
         }
     }
 
@@ -279,14 +280,15 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
     }
 
     private fun logToDart(level: String, message: String) {
+        if (!DebugLogger.enabled) return
         callbacks?.onLog(NativeLogEntry(level, message, System.currentTimeMillis(), "Android_Plugin")) { result ->
-            result.exceptionOrNull()?.let { android.util.Log.w(TAG, "Failed to send log", it) }
+            result.exceptionOrNull()?.let { DebugLogger.w(TAG, "Failed to send log", it) }
         }
     }
 
     fun sendPaymentResultToDart(result: NativePaymentResult) {
         callbacks?.onPaymentResult(result) { response ->
-            response.exceptionOrNull()?.let { android.util.Log.w(TAG, "Failed to send payment result", it) }
+            response.exceptionOrNull()?.let { DebugLogger.w(TAG, "Failed to send payment result", it) }
         }
     }
 
@@ -309,7 +311,7 @@ class RevolutSdkBridgePlugin: FlutterPlugin, RevolutHostApi, ActivityAware, NewI
         val sdkEnv = currentEnvironment?.name ?: "UNKNOWN"
         val maskedKey = maskMerchantKey(currentMerchantPublicKey)
         val message = "$origin | environment=$envLabel (sdk=$sdkEnv) | merchantKey=$maskedKey"
-        android.util.Log.i(TAG, message)
+        DebugLogger.i(TAG, message)
         logToDart("INFO", message)
     }
 

@@ -14,7 +14,7 @@ independent of the generated classes.
   the generated host API. `NativeButtonController` handles iOS view creation.
 - `callbacks/`: services expose application callbacks; the event dispatcher maps
   extensible native events to those callbacks.
-- `models/`: shared parameters, payment results, log entries, enums, and SDK errors.
+- `models/`: Freezed parameters, payment results, and log entries, plus enums and SDK errors.
   Configuration used only by the internal iOS native view stays internal.
 - `widgets/`: cross-platform widgets choose a native view. Android button and
   banner widgets have separate state; iOS button configuration is a model.
@@ -52,3 +52,13 @@ the Pigeon adapter can receive a generated host API. Tests verify the generated
 codec, error envelopes, callback routing, disposal/reinitialization, and unsupported
 platforms. Native builds verify both iOS dependency managers and Android compilation.
 Real payment outcomes require merchant sandbox tests.
+
+## Model generation
+
+Freezed and json_serializable generate the data models. The custom timestamp
+converter and enum annotations preserve native wire formats. Nested models are
+serialized explicitly into maps before platform-view creation. Run
+`bash tool/generate_models.sh` after editing model definitions; commit generated
+files so application consumers do not need to run builders. CI verifies that the
+committed output matches the definitions. Pigeon transport classes are generated
+independently from the Pigeon contract.

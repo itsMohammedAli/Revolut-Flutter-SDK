@@ -1,5 +1,6 @@
 package com.revolutpay.flutter.views
 
+import com.revolutpay.flutter.support.DebugLogger
 import android.app.Activity
 import android.content.Context
 import android.net.Uri
@@ -69,7 +70,7 @@ class RevolutPayButtonView(
     private var paymentStateJob: Job? = null
 
     init {
-        android.util.Log.i(TAG, "RevolutPayButtonView init start (viewId: $viewId)")
+        DebugLogger.i(TAG, "RevolutPayButtonView init start (viewId: $viewId)")
 
 
         val params = creationParams ?: emptyMap()
@@ -98,7 +99,7 @@ class RevolutPayButtonView(
 
         initializeController()
 
-        android.util.Log.i(TAG, "RevolutPayButtonView init complete (viewId: $viewId)")
+        DebugLogger.i(TAG, "RevolutPayButtonView init complete (viewId: $viewId)")
     }
 
     private fun createPlaceholderButton(context: Context): View = View(context).apply {
@@ -122,7 +123,7 @@ class RevolutPayButtonView(
             context = context,
             params = resolvedParams
         )
-        android.util.Log.d(TAG, "createRevolutPayButtonInView(viewId=$viewId): native button created")
+        DebugLogger.d(TAG, "createRevolutPayButtonInView(viewId=$viewId): native button created")
 
         revolutPayButton = button
         button.setOnClickListener {
@@ -133,7 +134,7 @@ class RevolutPayButtonView(
     }
 
     private fun handleButtonClick() {
-        android.util.Log.i(TAG, "handleButtonClick (viewId=$viewId, orderToken=${plugin.maskOrderToken(orderToken)})")
+        DebugLogger.i(TAG, "handleButtonClick (viewId=$viewId, orderToken=${plugin.maskOrderToken(orderToken)})")
         plugin.publishCurrentConfiguration("handleButtonClick(viewId=$viewId)")
 
         // Prevent multiple simultaneous payment attempts
@@ -184,7 +185,7 @@ class RevolutPayButtonView(
             return
         }
 
-        android.util.Log.d(
+        DebugLogger.d(
             TAG,
             "startPayment(viewId=$viewId): token=${plugin.maskOrderToken(token)}, returnUri=$returnUri, " +
                 "requestShipping=$shouldRequestShipping, savePaymentMethod=$savePaymentMethodForMerchant"
@@ -201,9 +202,9 @@ class RevolutPayButtonView(
 
         try {
             controller.pay(orderParams)
-            android.util.Log.i(TAG, "startPayment(viewId=$viewId): controller.pay() invoked, payment UI opening")
+            DebugLogger.i(TAG, "startPayment(viewId=$viewId): controller.pay() invoked, payment UI opening")
         } catch (e: Exception) {
-            android.util.Log.e(TAG, "startPayment(viewId=$viewId): controller.pay() threw", e)
+            DebugLogger.e(TAG, "startPayment(viewId=$viewId): controller.pay() threw", e)
             sendPaymentResult(false, "Payment failed to start", e.message ?: "unknown_error")
         }
     }
@@ -260,14 +261,14 @@ class RevolutPayButtonView(
 
         // Prevent duplicate controller initialization
         if (paymentController != null) {
-            android.util.Log.w(TAG, "initializeController(viewId=$viewId): controller already exists, skipping")
+            DebugLogger.w(TAG, "initializeController(viewId=$viewId): controller already exists, skipping")
             return
         }
 
         val activity = plugin.getActivity()
 
         if (activity !is ComponentActivity) {
-            android.util.Log.e(
+            DebugLogger.e(
                 TAG,
                 "initializeController(viewId=$viewId): host Activity is ${activity?.javaClass?.name ?: "null"}, " +
                     "not a ComponentActivity — make MainActivity extend FlutterFragmentActivity"
@@ -287,12 +288,12 @@ class RevolutPayButtonView(
 
         try {
             paymentController = RevolutPaymentsSDK.revolutPay.createController(activity) { result ->
-                android.util.Log.i(TAG, "Payment result callback received: ${result.javaClass.simpleName}")
+                DebugLogger.i(TAG, "Payment result callback received: ${result.javaClass.simpleName}")
                 handlePaymentResult(result)
             }
-            android.util.Log.i(TAG, "initializeController(viewId=$viewId): payment controller created")
+            DebugLogger.i(TAG, "initializeController(viewId=$viewId): payment controller created")
         } catch (e: Exception) {
-            android.util.Log.e(TAG, "initializeController(viewId=$viewId): failed to create controller", e)
+            DebugLogger.e(TAG, "initializeController(viewId=$viewId): failed to create controller", e)
             return
         }
 
@@ -300,7 +301,7 @@ class RevolutPayButtonView(
             override fun onResume(owner: LifecycleOwner) {
                 val state = paymentController?.paymentState?.value
                 val isProcessingState = state is PaymentState.Processing
-                android.util.Log.d(
+                DebugLogger.d(
                     TAG,
                     "Lifecycle onResume(viewId=$viewId) | paymentState=${state?.javaClass?.simpleName ?: "null"} | processing=$isProcessingState"
                 )
@@ -324,7 +325,7 @@ class RevolutPayButtonView(
         val controller = paymentController
         val button = revolutPayButton
         if (controller == null || button == null) {
-            android.util.Log.w(TAG, "initializeController(viewId=$viewId): missing controller or button, skipping state subscription")
+            DebugLogger.w(TAG, "initializeController(viewId=$viewId): missing controller or button, skipping state subscription")
         } else {
             button.bindPaymentState(controller, activity)
 
@@ -332,7 +333,7 @@ class RevolutPayButtonView(
             paymentStateJob = activity.lifecycleScope.launch {
                 controller.paymentState.collectLatest { state ->
                     val isProcessingState = state is PaymentState.Processing
-                    android.util.Log.d(
+                    DebugLogger.d(
                         TAG,
                         "paymentState update(viewId=$viewId): ${state.javaClass.simpleName} | inProgress=$isPaymentInProgress"
                     )
@@ -345,7 +346,7 @@ class RevolutPayButtonView(
     }
 
     private fun handlePaymentResult(result: PaymentResult) {
-        android.util.Log.i(TAG, "handlePaymentResult(viewId=$viewId): ${result.javaClass.simpleName}")
+        DebugLogger.i(TAG, "handlePaymentResult(viewId=$viewId): ${result.javaClass.simpleName}")
 
         when (result) {
             PaymentResult.Success -> {
@@ -359,7 +360,7 @@ class RevolutPayButtonView(
                 )
             }
             is PaymentResult.Failure -> {
-                android.util.Log.e(TAG, "handlePaymentResult(viewId=$viewId): failure", result.exception)
+                DebugLogger.e(TAG, "handlePaymentResult(viewId=$viewId): failure", result.exception)
                 sendPaymentResult(
                     success = false,
                     message = "Payment failed",

@@ -253,6 +253,7 @@ public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin, FlutterSceneLifeCy
     }
 
     private func logToDart(_ level: String, _ message: String) {
+        #if DEBUG
         let logData: [String: Any] = [
             "level": level,
             "message": message,
@@ -261,6 +262,7 @@ public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin, FlutterSceneLifeCy
         ]
 
         callbacks?.log(logData)
+        #endif
     }
 
     func getPlatformVersion() throws -> String { "iOS " + UIDevice.current.systemVersion }

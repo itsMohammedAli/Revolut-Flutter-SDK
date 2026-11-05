@@ -52,7 +52,7 @@ class RevolutCallbacks {
   /// Payment outcomes for custom-button payments.
   void Function(RevolutPaymentResult)? onPaymentResult;
 
-  /// Native SDK diagnostic messages.
+  /// Native SDK diagnostic messages, delivered only in debug builds.
   void Function(RevolutLogEntry)? onLog;
   OrderCompletedCallback? onOrderCompleted;
   OrderFailedCallback? onOrderFailed;

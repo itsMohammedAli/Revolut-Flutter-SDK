@@ -13,27 +13,27 @@ class NativeEventDispatcher {
     try {
       switch (methodName) {
         case 'onOrderCompleted':
-          debugPrint('🎉 ORDER COMPLETED: $data');
+          if (kDebugMode) debugPrint('🎉 ORDER COMPLETED: $data');
           callbacks.handleOrderCompleted(data);
           break;
         case 'onOrderFailed':
-          debugPrint('❌ ORDER FAILED: $data');
+          if (kDebugMode) debugPrint('❌ ORDER FAILED: $data');
           callbacks.handleOrderFailed(data);
           break;
         case 'onUserPaymentAbandoned':
-          debugPrint('⚠️ USER ABANDONED PAYMENT: $data');
+          if (kDebugMode) debugPrint('⚠️ USER ABANDONED PAYMENT: $data');
           callbacks.handleUserPaymentAbandoned(data);
           break;
         case 'onPaymentStatusUpdate':
-          debugPrint('📊 PAYMENT STATUS UPDATE: $data');
+          if (kDebugMode) debugPrint('📊 PAYMENT STATUS UPDATE: $data');
           callbacks.handlePaymentStatusUpdate(data);
           break;
         case 'onButtonClick':
-          debugPrint('🔵 BUTTON CLICKED: $data');
+          if (kDebugMode) debugPrint('🔵 BUTTON CLICKED: $data');
           callbacks.handleButtonClick(data);
           break;
         case 'onControllerStateChange':
-          debugPrint('🔄 CONTROLLER STATE CHANGE: $data');
+          if (kDebugMode) debugPrint('🔄 CONTROLLER STATE CHANGE: $data');
           callbacks.handleControllerStateChange(data);
           break;
         case 'onBannerInteraction':
@@ -43,7 +43,7 @@ class NativeEventDispatcher {
           callbacks.handleLifecycleEvent(data);
           break;
         case 'onDeepLinkReceived':
-          debugPrint('🔗 DEEP LINK RECEIVED: $data');
+          if (kDebugMode) debugPrint('🔗 DEEP LINK RECEIVED: $data');
           callbacks.handleDeepLinkEvent(data);
           break;
         case 'onNetworkStatusUpdate':
@@ -53,7 +53,7 @@ class NativeEventDispatcher {
           callbacks.handleConfigurationUpdate(data);
           break;
         case 'onDebugLog':
-          callbacks.handleDebugLog(data);
+          if (kDebugMode) callbacks.handleDebugLog(data);
           break;
         case 'onPerformanceMetric':
           callbacks.handlePerformanceMetric(data);
@@ -65,17 +65,19 @@ class NativeEventDispatcher {
           callbacks.handleSessionEvent(data);
           break;
         default:
-          debugPrint('❓ Unknown event method: $methodName');
+          if (kDebugMode) debugPrint('❓ Unknown event method: $methodName');
       }
     } catch (error, stack) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stack,
-          library: 'revolut_sdk_bridge',
-          context: ErrorDescription('dispatching a native event'),
-        ),
-      );
+      if (kDebugMode) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'revolut_sdk_bridge',
+            context: ErrorDescription('dispatching a native event'),
+          ),
+        );
+      }
     }
   }
 }

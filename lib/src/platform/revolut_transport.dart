@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../generated/revolut_api.g.dart';
 
 /// One callback receiver per Flutter isolate, shared by all platform adapters.
@@ -63,6 +64,7 @@ class RevolutTransport implements RevolutFlutterApi {
 
   @override
   Future<void> onLog(NativeLogEntry entry) async {
+    if (!kDebugMode) return;
     for (final listener in List.of(_logs)) {
       listener(entry);
     }
