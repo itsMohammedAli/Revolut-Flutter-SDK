@@ -39,7 +39,7 @@
 			children = (
 				A1234567890123456789012B /* RevolutSdkBridgePlugin.swift */,
 			);
-			path = Classes;
+			path = revolut_sdk_bridge/Sources/revolut_sdk_bridge;
 			sourceTree = "<group>";
 		};
 		A1234567890123456789012G /* Products */ = {

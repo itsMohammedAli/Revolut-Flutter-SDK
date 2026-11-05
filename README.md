@@ -3,7 +3,7 @@
 A Flutter plugin for accepting **Revolut Pay** payments using the native Revolut Pay
 SDKs — the **Revolut Pay Lite SDK** on Android and the **Revolut Pay SDK** on iOS.
 
-> Status: early release (`0.2.0`). The native payment flows must be verified against a
+> Status: early release (`0.2.1`). The native payment flows must be verified against a
 > real Revolut **merchant sandbox key** on a device/simulator — see
 > [Sandbox testing](#sandbox-testing). This plugin wraps native SDKs that cannot run in
 > CI, so always test the real flow before shipping.
@@ -42,7 +42,7 @@ dependencies:
   revolut_sdk_bridge:
     git:
       url: https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git
-      ref: feat/upgrade-native-sdks
+      ref: main
 ```
 
 ### Android setup
@@ -88,6 +88,22 @@ packaging {
 ```
 
 ### iOS setup
+
+The plugin supports Swift Package Manager and CocoaPods. Flutter selects SwiftPM
+when it is enabled in the host app (Flutter 3.44+); no manual Xcode package installation is needed.
+Both integrations use the official Revolut Pay SDK 3.18.0 and require iOS 15+.
+The iOS CI builds use Xcode 27, matching the verified SDK toolchain.
+
+To enable SwiftPM for your app, add this under `flutter:` in its `pubspec.yaml`:
+
+```yaml
+flutter:
+  config:
+    enable-swift-package-manager: true
+```
+
+After updating the Git dependency, run `flutter pub upgrade revolut_sdk_bridge` and rebuild the iOS app.
+
 
 Add your return-URL scheme and the Revolut query schemes to `ios/Runner/Info.plist`:
 
@@ -206,3 +222,16 @@ Optional defines: `REVOLUT_ENVIRONMENT` (defaults to `sandbox`) and
 Native releases were checked against
 [Maven Central](https://repo.maven.apache.org/maven2/com/revolut/payments/revolutpaylite/maven-metadata.xml)
 and the [CocoaPods spec](https://trunk.cocoapods.org/api/v1/pods/RevolutPayments/specs/3.18.0).
+
+## Developing the iOS example
+
+For SwiftPM example builds, clone this repository into a directory named
+`revolut_sdk_bridge`. Flutter adds a local package override for plugin examples;
+matching the directory name to the package name avoids duplicate package identities.
+This restriction applies to the plugin example checkout, not host applications.
+
+```sh
+git clone https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git revolut_sdk_bridge
+cd revolut_sdk_bridge/example
+flutter build ios --simulator --debug --no-codesign
+```
