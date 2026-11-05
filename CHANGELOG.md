@@ -1,3 +1,26 @@
+## Unreleased
+
+- Restrict Dart and native diagnostics/log callbacks to debug builds.
+
+- Use Freezed and generated JSON serializers for data models, with value equality and copyWith.
+- Preserve native map keys, enum values, timestamp formats, and parsing defaults.
+
+### Breaking cleanup
+
+- Keep a single public entry point and remove legacy forwarding files and platform exports.
+- Remove unsupported controller operations, unused models, and the platform-interface dependency.
+- Register callbacks automatically and replace manual event-channel helpers with `callbacksRegistered`.
+- Expose shared payment/log models and callbacks through `sdk.callbacks` on both platforms.
+
+- Organize implementation into API, models, callbacks, platform, widgets, generated, and compatibility modules.
+- Route the public facade through one shared platform contract.
+- Split native view, callback, and support code and remove global native plugin singletons.
+
+- Replace handwritten method/event channels with generated Pigeon APIs for Android and iOS.
+- Add typed initialization, payment, button, SDK info, result, and log messages.
+- Share callback routing and scope payment listeners by button ID.
+- Reuse the facade's Android adapter and fix the recursive legacy platform interface accessor.
+
 # Changelog
 
 ## Unreleased

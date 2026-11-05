@@ -80,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       if (!_isInitialized)
                         ElevatedButton(onPressed: _initializeSDK, child: const Text('Initialize SDK')),
                       if (_isInitialized)
-                        ElevatedButton(onPressed: _testEventChannel, child: const Text('Test Event Channel')),
+                        ElevatedButton(onPressed: _showSdkStatus, child: const Text('Check SDK Status')),
                     ],
                   ),
                 ),
@@ -420,35 +420,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _testEventChannel() async {
-    try {
-      // Test event channel setup
-      final eventChannelReady = await RevolutSdkBridge().setupEventChannel();
-
-      // Test waiting for event channel
-      final waitResult = await RevolutSdkBridge().waitForEventChannel();
-
-      // Get plugin status
-      final status = await RevolutSdkBridge().getPluginStatus();
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Event Channel Test:\n'
-            'Setup: ${eventChannelReady ? "Success" : "Failed"}\n'
-            'Wait: ${waitResult ? "Success" : "Failed"}\n'
-            'Status: ${status.toString()}',
-          ),
-          backgroundColor: (eventChannelReady && waitResult) ? Colors.green : Colors.orange,
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Event Channel Test Error: $e'), backgroundColor: Colors.red));
-    }
+  Future<void> _showSdkStatus() async {
+    final status = await RevolutSdkBridge().getPluginStatus();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('SDK status: $status')));
   }
 }

@@ -1,55 +1,61 @@
 # revolut_sdk_bridge
 
-A Flutter plugin for accepting **Revolut Pay** payments using the native Revolut Pay
-SDKs — the **Revolut Pay Lite SDK** on Android and the **Revolut Pay SDK** on iOS.
+A Flutter plugin for accepting Revolut Pay payments through the native Android
+and iOS SDKs. The bridge uses Pigeon for typed native communication and Freezed
+for immutable Dart data models.
 
-> Status: early release (`0.2.1`). The native payment flows must be verified against a
-> real Revolut **merchant sandbox key** on a device/simulator — see
-> [Sandbox testing](#sandbox-testing). CI verifies compilation and automated tests;
-> verify real payment flows in sandbox before shipping.
+## Supported features
 
-## What's supported
-
-| Feature | Android | iOS |
+| Public API | Android | iOS |
 | --- | :---: | :---: |
-| `RevolutPayButton` widget (native button + real payment) | ✅ | ✅ |
-| `CrossPlatformRevolutPayButton` widget | ✅ | ✅ |
-| One-shot `pay()` for your own custom button | ✅ | ❌ (button-only SDK) |
-| Promotional banner (`RevolutPayPromoBanner`) | ✅ | ❌ (Android only) |
-| Manual "confirmation flow" / payment controllers | ❌ (not in the SDK) | ❌ |
+| `CrossPlatformRevolutPayButton` | ✅ | ✅ |
+| `RevolutSdkBridge.processPayment()` for custom buttons | ✅ | ✅ |
+| `CrossPlatformRevolutPayPromoBanner` | ✅ | — |
+| Payment result callbacks | ✅ | ✅ |
+| Diagnostic log callbacks, debug builds only | ✅ | ✅ |
 
-The Revolut Pay **Lite** SDK (Android) and the iOS SDK do **not** expose a manual
-confirmation-flow/controller API. The former `createController` / `setOrderToken` /
-`continueConfirmationFlow` / `disposeController` methods now return an explicit
-`UNSUPPORTED` error instead of a fake success. Use the widget, or `pay()` on Android.
+Orders are created on your backend. Pass the resulting order token to the plugin;
+the plugin does not create orders or require your merchant secret key.
 
 ## Requirements
 
-- **Android:** `minSdkVersion` **28** (Android 9). Your `MainActivity` **must** extend
-  `FlutterFragmentActivity` (see below).
-- **iOS:** **15.0+**.
-- **Flutter:** **3.41.0+**, Dart **3.9.0+**.
-- Native SDK versions: Android Revolut Pay Lite **3.4.0**, iOS Revolut Pay **3.18.0**.
-- A Revolut **merchant public key** (sandbox or production) from the
-  [Revolut Merchant Dashboard](https://merchant.revolut.com/).
-- An **order token** created server-side via the Revolut Merchant API. The plugin never
-  creates orders — your backend does, and you pass the resulting `orderToken` in.
+- Flutter **3.41.0+**, Dart **3.9.0+**, as declared in `pubspec.yaml`.
+- Android **9+** (`minSdk = 28`) with a `FlutterFragmentActivity` host.
+- iOS **15+**.
+- Native SDKs: Android Revolut Pay Lite **3.4.0**, iOS Revolut Pay **3.18.0**.
+- A merchant public key and an order token for the selected environment.
+
+For repository development and code generation, use Dart **3.13+** with the
+pinned generator dependencies. Use **JDK 17** for the example's Gradle build.
+Android implementation code is Kotlin; iOS implementation code is Swift.
 
 ## Installation
+
+Add the Git dependency and pin `ref` to a tag or commit containing this API:
 
 ```yaml
 dependencies:
   revolut_sdk_bridge:
     git:
       url: https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git
-      ref: main
+      ref: <tag-or-commit>
 ```
+
+Run `flutter pub get`. Application consumers use the committed generated code
+and do not need to run Pigeon or Freezed generators.
+
+Import the package through its single public entry point:
+
+```dart
+import 'package:revolut_sdk_bridge/revolut_sdk_bridge.dart';
+```
+
+## Platform setup
 
 ### Android setup
 
 1. **`MainActivity` must extend `FlutterFragmentActivity`.** The Revolut SDK requires a
-   `ComponentActivity` host; a plain `FlutterActivity` will not work and payments will
-   silently fail.
+   `ComponentActivity` host; a plain `FlutterActivity` does not satisfy that native requirement.
 
    ```kotlin
    // android/app/src/main/kotlin/.../MainActivity.kt
@@ -77,7 +83,7 @@ dependencies:
    `<queries><package android:name="com.revolut.revolut"/></queries>` entry, so you do
    **not** need `QUERY_ALL_PACKAGES` (a Play Store restricted permission).
 
-The updated SDK pulls in libraries that both include an OSGi manifest. If your
+Some native dependencies include the same OSGi manifest. If your
 app reports a duplicate Java resource, add this inside `android {}` in your app's
 `build.gradle.kts` (as in the example):
 
@@ -89,12 +95,9 @@ packaging {
 
 ### iOS setup
 
-The plugin supports Swift Package Manager and CocoaPods. Flutter selects SwiftPM
-when it is enabled in the host app (Flutter 3.44+); no manual Xcode package installation is needed.
-Both integrations use the official Revolut Pay SDK 3.18.0 and require iOS 15+.
-The iOS CI builds use Xcode 27, matching the verified SDK toolchain.
-
-To enable SwiftPM for your app, add this under `flutter:` in its `pubspec.yaml`:
+The plugin supports Swift Package Manager and CocoaPods. Both integrations use
+Revolut Pay SDK 3.18.0 and require iOS 15+. Enable SwiftPM in the host app to use
+the bundled Swift package:
 
 ```yaml
 flutter:
@@ -102,8 +105,8 @@ flutter:
     enable-swift-package-manager: true
 ```
 
-After updating the Git dependency, run `flutter pub upgrade revolut_sdk_bridge` and rebuild the iOS app.
-
+For CocoaPods, run `pod install` in the app's `ios` directory after updating the
+plugin or changing native source layout. Rebuild the app after native changes.
 
 Add your return-URL scheme and the Revolut query schemes to `ios/Runner/Info.plist`:
 
@@ -129,53 +132,82 @@ explained in [Revolut's iOS setup guide](https://developer.revolut.com/docs/guid
 
 ## Usage
 
-### 1. Initialize the SDK
+### Initialize
 
 ```dart
-import 'package:revolut_sdk_bridge/revolut_sdk_bridge.dart';
+final sdk = RevolutSdkBridge();
 
-await RevolutSdkBridge().initialize(
-  merchantPublicKey: 'pk_XXXXXXXX', // sandbox or production key
-  environment: 'sandbox',           // or 'production' / 'main'
+await sdk.initialize(
+  merchantPublicKey: 'your_public_sandbox_key',
+  environment: 'sandbox', // 'production' or 'main' for production
 );
 ```
 
-### 2. Show the Revolut Pay button (recommended)
+Use an order token from the same environment as the merchant public key.
+Callbacks register automatically during initialization; no channel setup or
+readiness polling is required.
 
-Create the order on your backend, get the `orderToken`, then render the button:
+### Display a payment button
 
 ```dart
 CrossPlatformRevolutPayButton(
-  orderToken: orderToken,   // from your server
-  amount: 1000,             // minor units, e.g. 1000 = £10.00
+  orderToken: orderToken, // created by your backend
+  amount: 1000, // minor units: 1000 = GBP 10.00
   currency: 'GBP',
   email: 'customer@example.com',
   returnURL: 'revolut-sdk-bridge://revolut-pay',
-  onPaymentResult: (result) => debugPrint('Paid: $result'),
-  onPaymentCancelled: () => debugPrint('Cancelled'),
-  onError: (error) => debugPrint('Error: $error'),
+  onPaymentResult: (result) {
+    // Update your application's payment state.
+  },
+  onPaymentCancelled: () {
+    // Let the customer retry.
+  },
+  onPaymentError: (message) {
+    // Display the payment error.
+  },
+  onError: (message) {
+    // Handle button setup or other widget errors.
+  },
 );
 ```
 
-### 3. One-shot `pay()` with your own button (Android only)
+The widget selects the native Android or iOS button and owns its payment listener.
+Use widget callbacks for widget payments. The widget's result is a map; custom
+button payments use the typed `RevolutPaymentResult` callback below.
+
+### Use your own button
+
+Register the result callback before starting a custom payment on either platform:
 
 ```dart
-// Android only. On iOS this throws (the iOS SDK is button-only — use the widget).
-await RevolutSdkBridge().processPayment(
+sdk.callbacks.onPaymentResult = (RevolutPaymentResult result) {
+  if (result.success) {
+    // Update the order state.
+  } else if (result.error == 'user_abandoned_payment') {
+    // Let the customer retry.
+  } else {
+    // Display result.error or result.message.
+  }
+};
+
+final started = await sdk.processPayment(
   orderToken: orderToken,
   savePaymentMethodForMerchant: false,
 );
-// The result arrives via the event channel (onOrderCompleted / onOrderFailed /
-// onUserPaymentAbandoned) — see RevolutCallbacks.
 ```
 
-### 4. Promotional banner (Android only)
+`started` reports that the flow was initiated; the final outcome arrives through
+`onPaymentResult`. Custom payments use the default return URL
+`revolut-sdk-bridge://revolut-pay`, which must be registered in your app.
+Android-specific order and lifecycle events are also available on `sdk.callbacks`.
 
-The banner **requires** customer details (email, phone, country):
+### Display a promotional banner
+
+Promotional banners are supported on Android and require customer details:
 
 ```dart
 CrossPlatformRevolutPayPromoBanner(
-  promoParams: PromoBannerParamsData(
+  promoParams: const PromoBannerParamsData(
     transactionId: 'txn_123',
     paymentAmount: 1000,
     currency: RevolutCurrency.gbp,
@@ -188,63 +220,159 @@ CrossPlatformRevolutPayPromoBanner(
 );
 ```
 
-## Sandbox testing
+### Dispose callbacks
 
-1. Get a **sandbox** merchant key from the Revolut Merchant Dashboard.
-2. Create an order server-side (Merchant API) and pass its `orderToken` to the widget.
-3. Run on a real device or simulator and complete a payment.
-4. The sandbox replicates production **except** there is no app redirect (there is no
-   sandbox build of the Revolut retail app).
+```dart
+sdk.dispose();
+```
 
-## License
+Dispose the SDK's callbacks when their owner no longer needs them. Payment widgets
+remove their own listeners when disposed. Initializing the SDK again registers
+its callbacks again.
 
-[MIT](LICENSE)
+## Models
 
-## Upgrading from 0.1.0
+Data models use Freezed for immutable values, value equality, `copyWith`, and
+JSON serialization:
 
-Raise your iOS deployment target to 15.0 in the Podfile and Xcode project, then
-run `pod update RevolutPayments` inside your iOS directory. Android requires
-`minSdk = 28`, matching the existing integration branch.
+```dart
+const params = ButtonParamsData();
+final smallButton = params.copyWith(size: ButtonSize.small);
+final restored = ButtonParamsData.fromJson(smallButton.toJson());
 
-Use Java 17 for the example Android build (AGP 8.11.1, Gradle 8.14.3, Kotlin 2.2.21).
-The plugin forwards iOS payment returns through both AppDelegate and UIScene callbacks.
+assert(restored == smallButton);
+```
 
-The example uses public configuration passed at launch:
+`toMap` and `fromMap` delegate to the generated serializers. Native enum values
+remain uppercase, nested models serialize into maps, and callback timestamps use
+epoch milliseconds. SDK exceptions and Flutter widget styles remain ordinary
+classes. Pigeon owns its separate transport models.
+
+## Logging
+
+**Plugin logging is debug-only.** Release builds do not print plugin diagnostics
+or deliver `sdk.callbacks.onLog` events. Payment results and operational errors
+remain available in release builds.
+
+To observe diagnostic messages while debugging:
+
+```dart
+// debugPrint is available from package:flutter/foundation.dart.
+sdk.callbacks.onLog = (RevolutLogEntry entry) {
+  debugPrint(entry.toString());
+};
+```
+
+Dart diagnostics use `kDebugMode`; Kotlin logging checks the debug build
+configuration; Swift diagnostics use `#if DEBUG`. Application-owned logging is
+controlled by your application.
+
+## Diagnostics
+
+```dart
+final status = await sdk.getPluginStatus();
+final platformVersion = await sdk.getPlatformVersion();
+final nativeSdkVersion = await sdk.getSdkVersion();
+final registered = sdk.callbacksRegistered;
+```
+
+`callbacksRegistered` describes local listener registration, not merchant key
+validity or the outcome of a payment.
+
+## Migrating to the simplified API
+
+This refactor removes the old `android/`, `ios/`, and root bridge import paths,
+MethodChannel aliases, platform-interface adapters, and manual event-channel
+setup helpers. Use the single public import and the SDK/widget APIs above.
+Manual controller operations and imperative button/banner creation methods have
+been removed; use the widgets to render native UI.
+
+Replace static iOS callback services with `sdk.callbacks.onPaymentResult` and
+`sdk.callbacks.onLog`. Shared callback models are named `RevolutPaymentResult`,
+`RevolutLogEntry`, and `RevolutLogLevel`.
+
+After upgrading, rebuild the native app. CocoaPods users should run `pod install`
+in the app's `ios` directory to refresh native source references.
+
+## Development
+
+### Run the example
+
+For SwiftPM example builds, clone into a directory named `revolut_sdk_bridge`.
+Flutter's local package override uses that directory name as the package identity.
+This checkout requirement applies to this repository's example, not host apps.
 
 ```sh
+git clone https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git revolut_sdk_bridge
+cd revolut_sdk_bridge
+flutter pub get
 cd example
 flutter run --dart-define=REVOLUT_PUBLIC_KEY=your_public_sandbox_key
 ```
 
 Optional defines: `REVOLUT_ENVIRONMENT` (defaults to `sandbox`) and
-`REVOLUT_ORDER_ENDPOINT` (your backend endpoint). Never pass a merchant secret key.
+`REVOLUT_ORDER_ENDPOINT` (your backend endpoint). Keep merchant secret keys on
+your backend.
 
-Native releases were checked against
-[Maven Central](https://repo.maven.apache.org/maven2/com/revolut/payments/revolutpaylite/maven-metadata.xml)
-and the [CocoaPods spec](https://trunk.cocoapods.org/api/v1/pods/RevolutPayments/specs/3.18.0).
-
-## Developing the iOS example
-
-For SwiftPM example builds, clone this repository into a directory named
-`revolut_sdk_bridge`. Flutter adds a local package override for plugin examples;
-matching the directory name to the package name avoids duplicate package identities.
-This restriction applies to the plugin example checkout, not host applications.
+### Generate code
 
 ```sh
-git clone https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git revolut_sdk_bridge
-cd revolut_sdk_bridge/example
+# From the repository root:
+flutter pub get
+bash tool/generate_models.sh
+bash tool/generate_pigeon.sh
+```
+
+- Edit Freezed model definitions under `lib/src/models/`. Commit their generated
+  `.freezed.dart` and `.g.dart` files.
+- Edit `pigeons/revolut_api.dart` for transport changes. Regenerate and commit the
+  Dart, Kotlin, and Swift bindings together with the pinned Pigeon version.
+- Do not edit generated files by hand. A full rebuild is required after native
+  bridge changes; hot reload cannot replace native handlers.
+
+### Verify changes
+
+```sh
+flutter analyze
+flutter test
+cd example
+flutter test
+flutter build apk --debug
 flutter build ios --simulator --debug --no-codesign
 ```
 
-## Repository layout
+CI checks generated files, analysis, tests, Android compilation, both iOS dependency
+managers, and the Android release-logging regression test. Native payment flows
+still need verification with a merchant sandbox key and a backend-created order.
 
-- `lib/`: public Dart API and platform bridges.
-- `android/`: Android plugin library.
-- `ios/revolut_sdk_bridge/`: Swift package and shared iOS implementation.
-- `ios/revolut_sdk_bridge.podspec`: CocoaPods integration.
-- `example/`: runnable Android/iOS demo, widget test, and device integration test.
-- `test/`: package unit tests.
-- `.github/workflows/`: analysis, tests, and native build checks.
+### Repository layout
 
-Run `flutter analyze` and `flutter test` at the repository root, then
-`cd example && flutter test` for the demo smoke test.
+```text
+lib/
+  revolut_sdk_bridge.dart          # only public entry point
+  src/
+    api/                          # SDK facade
+    models/                       # Freezed definitions, generated data models, errors
+    callbacks/                    # callback container and event dispatch
+    platform/                     # platform contract, adapter, callback transport
+    widgets/                      # cross-platform and internal native-view widgets
+    generated/                    # Pigeon Dart bindings
+pigeons/                          # Pigeon source contract
+tool/                             # generation scripts
+android/src/main/kotlin/com/revolutpay/flutter/
+  generated/                      # Pigeon Kotlin bindings
+  views/                          # button and banner views
+  support/                        # payment option parsing and debug logging
+ios/revolut_sdk_bridge/Sources/revolut_sdk_bridge/
+  Generated/                      # Pigeon Swift bindings
+  Callbacks/                      # callbacks and debug log delivery
+  Views/                          # native button and factory
+  Support/                        # native helpers
+```
+
+See [architecture notes](doc/architecture.md) for module ownership and lifecycle
+details.
+
+## License
+
+[MIT](LICENSE)

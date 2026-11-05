@@ -1,6 +1,7 @@
+import 'package:flutter/services.dart';
+import 'package:revolut_sdk_bridge/src/models/ios_button_config.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:revolut_sdk_bridge/android/enums/revolut_enums.dart';
-import 'package:revolut_sdk_bridge/android/models/revolut_pay_models.dart';
+import 'package:revolut_sdk_bridge/revolut_sdk_bridge.dart';
 
 void main() {
   group('ButtonParamsData', () {
@@ -63,28 +64,86 @@ void main() {
       expect(result.cause, 'network');
     });
   });
+  test(
+    'nested banner models serialize as native maps and round-trip by value',
+    () {
+      const banner = PromoBannerParamsData(
+        transactionId: 'order-1',
+        paymentAmount: 1500,
+        currency: RevolutCurrency.eur,
+        customer: CustomerData(
+          email: 'buyer@example.com',
+          country: 'FR',
+          dateOfBirth: DateOfBirthData(day: 2, month: 3, year: 1990),
+        ),
+      );
+      final map = banner.toMap();
+      expect(map['currency'], 'EUR');
+      expect(map['customer'], isA<Map<String, dynamic>>());
+      expect((map['customer'] as Map)['dateOfBirth'], {
+        'day': 2,
+        'month': 3,
+        'year': 1990,
+      });
+      expect(PromoBannerParamsData.fromMap(map), banner);
+      final changed = banner.copyWith.customer!(email: 'changed@example.com');
+      expect(changed.customer?.email, 'changed@example.com');
+      expect(banner.customer?.email, 'buyer@example.com');
+      expect(changed, isNot(banner));
+    },
+  );
 
-  group('SdkInitData', () {
-    test('fromMap resolves environment by wire value', () {
-      final sandbox = SdkInitData.fromMap({
-        'environment': 'SANDBOX',
-        'returnUri': 'app://pay',
-        'merchantPublicKey': 'pk_test',
-      });
-      final main = SdkInitData.fromMap({
-        'environment': 'MAIN',
-        'returnUri': 'app://pay',
-        'merchantPublicKey': 'pk_live',
-      });
-      final unknown = SdkInitData.fromMap({
-        'environment': 'whatever',
-        'returnUri': 'app://pay',
-        'merchantPublicKey': 'pk',
-      });
+  test('nullable result fields can be cleared with copyWith', () {
+    const result = OrderResultData(success: false, error: 'declined');
+    final updated = result.copyWith(success: true, error: null);
+    expect(updated, const OrderResultData(success: true));
+    expect(result.error, 'declined');
+  });
 
-      expect(sandbox.environment, RevolutEnvironment.sandbox);
-      expect(main.environment, RevolutEnvironment.main);
-      expect(unknown.environment, RevolutEnvironment.sandbox);
+  test('callback JSON preserves native timestamps and log-level parsing', () {
+    final log = RevolutLogEntry.fromMap({
+      'level': 'wArNiNg',
+      'timestamp': 1234,
+      'message': 'ready',
     });
+    expect(log.level, RevolutLogLevel.warning);
+    expect(log.timestamp.millisecondsSinceEpoch, 1234);
+    expect(log.toJson()['timestamp'], 1234);
+    expect(log.toJson()['level'], 'WARNING');
+    expect(log.source, 'Unknown');
+    expect(RevolutLogEntry.fromJson(log.toJson()), log);
+    expect(
+      RevolutLogEntry.fromMap({'level': 'unknown'}).level,
+      RevolutLogLevel.info,
+    );
+    expect(RevolutLogEntry.fromMap({}).timestamp.millisecondsSinceEpoch, 0);
+    final result = RevolutPaymentResult.fromMap({
+      'success': true,
+      'timestamp': 1234.0,
+    });
+    expect(result.timestamp.millisecondsSinceEpoch, 1234);
+    expect(RevolutPaymentResult.fromJson(result.toJson()), result);
+    expect(result.message, '');
+    expect(result.error, '');
+  });
+  test('iOS configuration stays codec-compatible with immutable metadata', () {
+    const config = RevolutPayButtonConfigIos(
+      orderToken: 'token',
+      amount: 1500,
+      currency: 'EUR',
+      email: 'buyer@example.com',
+      additionalData: {'reference': 'ref-1'},
+    );
+    expect(
+      () => config.additionalData!['reference'] = 'changed',
+      throwsUnsupportedError,
+    );
+    final map = config.toMap();
+    const codec = StandardMessageCodec();
+    expect(codec.decodeMessage(codec.encodeMessage(map)), map);
+    expect(RevolutPayButtonConfigIos.fromJson(map), config);
+    final changed = config.copyWith(additionalData: null, amount: 2000);
+    expect(changed.additionalData, isNull);
+    expect(config.additionalData?['reference'], 'ref-1');
   });
 }
