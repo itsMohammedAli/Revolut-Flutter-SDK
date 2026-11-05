@@ -373,6 +373,13 @@ ios/revolut_sdk_bridge/Sources/revolut_sdk_bridge/
 See [architecture notes](doc/architecture.md) for module ownership and lifecycle
 details.
 
+## Acknowledgments
+
+This work builds on and completes the earlier work by
+[berhili098](https://github.com/berhili098) and
+[nimr77](https://github.com/nimr77). Thank you both for laying the foundation
+for this package.
+
 ## License
 
 [MIT](LICENSE)
