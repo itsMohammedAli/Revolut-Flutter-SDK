@@ -42,7 +42,7 @@ dependencies:
   revolut_sdk_bridge:
     git:
       url: https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git
-      ref: feat/upgrade-native-sdks
+      ref: main
 ```
 
 ### Android setup
@@ -101,7 +101,7 @@ flutter:
     enable-swift-package-manager: true
 ```
 
-After updating the Git dependency, run `flutter pub get` and rebuild the iOS app.
+After updating the Git dependency, run `flutter pub upgrade revolut_sdk_bridge` and rebuild the iOS app.
 
 
 Add your return-URL scheme and the Revolut query schemes to `ios/Runner/Info.plist`:
