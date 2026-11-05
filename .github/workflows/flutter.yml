@@ -18,6 +18,10 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Verify Pigeon bindings
+        run: |
+          bash tool/generate_pigeon.sh
+          git diff --exit-code -- lib/src/generated android/src/main/kotlin/com/revolutpay/flutter/generated/RevolutApi.g.kt ios/revolut_sdk_bridge/Sources/revolut_sdk_bridge/Generated/RevolutApi.g.swift
       - run: flutter analyze
       - run: flutter test
       - run: flutter test

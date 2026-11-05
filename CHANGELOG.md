@@ -1,3 +1,15 @@
+## Unreleased
+
+- Organize implementation into API, models, callbacks, platform, widgets, generated, and compatibility modules.
+- Route the public facade through one shared platform contract and retain historical import paths.
+- Split native view, callback, and support code and remove global native plugin singletons.
+
+- Replace handwritten method/event channels with generated Pigeon APIs for Android and iOS.
+- Add typed initialization, payment, button, SDK info, result, and log messages.
+- Share callback routing and scope payment listeners by button ID.
+- Reuse the facade's Android adapter and fix the recursive legacy platform interface accessor.
+- Preserve historical bridge class names and public result maps through compatibility adapters.
+
 # Changelog
 
 ## Unreleased
