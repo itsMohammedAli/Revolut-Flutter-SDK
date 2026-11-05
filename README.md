@@ -5,8 +5,8 @@ SDKs — the **Revolut Pay Lite SDK** on Android and the **Revolut Pay SDK** on 
 
 > Status: early release (`0.2.1`). The native payment flows must be verified against a
 > real Revolut **merchant sandbox key** on a device/simulator — see
-> [Sandbox testing](#sandbox-testing). This plugin wraps native SDKs that cannot run in
-> CI, so always test the real flow before shipping.
+> [Sandbox testing](#sandbox-testing). CI verifies compilation and automated tests;
+> verify real payment flows in sandbox before shipping.
 
 ## What's supported
 
@@ -235,3 +235,16 @@ git clone https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git revolut_sdk_
 cd revolut_sdk_bridge/example
 flutter build ios --simulator --debug --no-codesign
 ```
+
+## Repository layout
+
+- `lib/`: public Dart API and platform bridges.
+- `android/`: Android plugin library.
+- `ios/revolut_sdk_bridge/`: Swift package and shared iOS implementation.
+- `ios/revolut_sdk_bridge.podspec`: CocoaPods integration.
+- `example/`: runnable Android/iOS demo, widget test, and device integration test.
+- `test/`: package unit tests.
+- `.github/workflows/`: analysis, tests, and native build checks.
+
+Run `flutter analyze` and `flutter test` at the repository root, then
+`cd example && flutter test` for the demo smoke test.
