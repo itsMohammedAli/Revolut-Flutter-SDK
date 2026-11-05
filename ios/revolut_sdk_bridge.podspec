@@ -4,23 +4,24 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'revolut_sdk_bridge'
-  s.version          = '1.0.0'
-  s.summary          = 'A Flutter plugin that provides a bridge to the native Revolut Pay SDK for iOS.'
+  s.version          = '0.2.0'
+  s.summary          = 'Flutter plugin for accepting Revolut Pay payments via the native Revolut Pay SDK on iOS.'
   s.description      = <<-DESC
-A Flutter plugin that provides a bridge to the native Revolut Pay SDK for iOS, allowing you to accept Revolut Pay payments in your Flutter apps.
+Flutter plugin that bridges the native Revolut Pay SDK for iOS, allowing you to accept Revolut Pay payments in your Flutter apps.
                        DESC
-  s.homepage         = 'https://github.com/your-username/revolut_sdk_bridge'
-  s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.homepage         = 'https://github.com/itsMohammedAli/Revolut-Flutter-SDK'
+  s.license          = { :type => 'MIT', :file => '../LICENSE' }
+  s.author           = { 'Oussama Berhili' => 'oussamaberhili190@gmail.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'RevolutPayments/RevolutPay', '~> 3.9.0'
-  s.platform = :ios, '13.0'
+  s.dependency 'RevolutPayments/RevolutPay', '3.18.0'
+  s.platform = :ios, '15.0'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
   s.swift_version = '5.0'
+  s.static_framework = true
 
   # If your plugin requires a privacy manifest, for example if it uses any
   # required reason APIs, update the PrivacyInfo.xcprivacy file to describe your

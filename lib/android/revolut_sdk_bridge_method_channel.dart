@@ -11,9 +11,7 @@ import 'services/revolut_callbacks.dart';
 /// This class handles all method calls and event streams between Flutter and native Android
 class RevolutSdkBridgeMethodChannel {
   static const MethodChannel _channel = MethodChannel('revolut_sdk_bridge');
-  static const EventChannel _eventChannel = EventChannel(
-    'revolut_sdk_bridge_events',
-  );
+  static const EventChannel _eventChannel = EventChannel('revolut_sdk_bridge_events');
 
   final RevolutCallbacks _callbacks;
   StreamSubscription<dynamic>? _eventSubscription;
@@ -40,23 +38,33 @@ class RevolutSdkBridgeMethodChannel {
   /// Checks if the SDK is initialized
   bool get isInitialized => _isInitialized;
 
+  /// Ensures a platform map is returned as a `Map<String, dynamic>`
+  Map<String, dynamic> _ensureStringDynamicMap(Object? value) {
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+    if (value is Map) {
+      final mapped = value.map((key, v) => MapEntry(key.toString(), v));
+      return Map<String, dynamic>.from(mapped);
+    }
+    throw FormatException(
+      'Invalid response format from native side. Expected Map<String, dynamic>, got ${value.runtimeType}',
+    );
+  }
+
   /// Continues the confirmation flow
   Future<bool> continueConfirmationFlow({required String controllerId}) async {
     try {
-      final result = await _channel.invokeMethod('continueConfirmationFlow', {
-        'controllerId': controllerId,
-      });
+      final result = await _channel.invokeMethod('continueConfirmationFlow', {'controllerId': controllerId});
 
       if (result is bool) {
         return result;
-      } else if (result is Map<String, dynamic>) {
-        return result['success'] as bool? ?? false;
+      } else if (result is Map) {
+        return _ensureStringDynamicMap(result)['success'] as bool? ?? false;
       }
       return false;
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during continueConfirmationFlow: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during continueConfirmationFlow: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during continueConfirmationFlow: $e');
@@ -73,14 +81,12 @@ class RevolutSdkBridgeMethodChannel {
     try {
       final result = await _channel.invokeMethod('createController');
 
-      if (result is Map<String, dynamic>) {
-        return ControllerResultData.fromMap(result);
+      if (result is Map) {
+        return ControllerResultData.fromMap(_ensureStringDynamicMap(result));
       }
       throw FormatException('Invalid response format from native side');
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during createController: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during createController: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during createController: $e');
@@ -98,20 +104,16 @@ class RevolutSdkBridgeMethodChannel {
   /// Disposes a controller
   Future<bool> disposeController({required String controllerId}) async {
     try {
-      final result = await _channel.invokeMethod('disposeController', {
-        'controllerId': controllerId,
-      });
+      final result = await _channel.invokeMethod('disposeController', {'controllerId': controllerId});
 
       if (result is bool) {
         return result;
-      } else if (result is Map<String, dynamic>) {
-        return result['success'] as bool? ?? false;
+      } else if (result is Map) {
+        return _ensureStringDynamicMap(result)['success'] as bool? ?? false;
       }
       return false;
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during disposeController: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during disposeController: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during disposeController: $e');
@@ -137,9 +139,7 @@ class RevolutSdkBridgeMethodChannel {
       }
       throw FormatException('Invalid response format from native side');
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during getPlatformVersion: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during getPlatformVersion: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during getPlatformVersion: $e');
@@ -148,27 +148,18 @@ class RevolutSdkBridgeMethodChannel {
   }
 
   /// Gets the SDK version
-  Future<Map<String, dynamic>> getSdkVersion() async {
+  Future<Map<Object, dynamic>> getSdkVersion() async {
     try {
       debugPrint('Invoking getSdkVersion method...');
       final result = await _channel.invokeMethod('getSdkVersion');
       debugPrint('getSdkVersion raw result: $result');
       debugPrint('getSdkVersion result type: ${result.runtimeType}');
 
-      if (result is Map<String, dynamic>) {
-        debugPrint(
-          'getSdkVersion result is Map with keys: ${result.keys.toList()}',
-        );
-        return result;
-      }
-      debugPrint('getSdkVersion result is not Map, throwing FormatException');
-      throw FormatException(
-        'Invalid response format from native side. Expected Map<String, dynamic>, got ${result.runtimeType}',
-      );
+      final map = _ensureStringDynamicMap(result);
+      debugPrint('getSdkVersion result is Map with keys: ${map.keys.toList()}');
+      return map;
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during getSdkVersion: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during getSdkVersion: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during getSdkVersion: $e');
@@ -177,23 +168,14 @@ class RevolutSdkBridgeMethodChannel {
   }
 
   /// Initializes the Revolut Pay SDK
-  Future<bool> init({
-    required String environment,
-    required String returnUri,
-    required String merchantPublicKey,
-    bool requestShipping = false,
-    Map<String, dynamic>? customer,
-  }) async {
+  Future<bool> init({required String environment, required String merchantPublicKey}) async {
     try {
       // Ensure event channel is ready before proceeding
       ensureEventChannelReady();
 
       final result = await _channel.invokeMethod('init', {
         'environment': environment,
-        'returnUri': returnUri,
         'merchantPublicKey': merchantPublicKey,
-        'requestShipping': requestShipping,
-        'customer': customer,
       });
 
       if (result is bool) {
@@ -215,10 +197,7 @@ class RevolutSdkBridgeMethodChannel {
   }
 
   /// Initiates a payment flow
-  Future<bool> pay({
-    required String orderToken,
-    bool savePaymentMethodForMerchant = false,
-  }) async {
+  Future<bool> pay({required String orderToken, bool savePaymentMethodForMerchant = false}) async {
     if (!_isInitialized) {
       throw StateError('Revolut SDK not initialized. Call init() first.');
     }
@@ -231,8 +210,9 @@ class RevolutSdkBridgeMethodChannel {
 
       if (result is bool) {
         return result;
-      } else if (result is Map<String, dynamic>) {
-        return result['success'] as bool? ?? false;
+      } else if (result is Map) {
+        final map = _ensureStringDynamicMap(result);
+        return map['success'] as bool? ?? map['status'] == 'initiated';
       }
       return false;
     } on PlatformException catch (e) {
@@ -245,26 +225,20 @@ class RevolutSdkBridgeMethodChannel {
   }
 
   /// Creates a Revolut Pay button
-  Future<ButtonResultData> provideButton({
-    Map<String, dynamic>? buttonParams,
-  }) async {
+  Future<ButtonResultData> provideButton({Map<String, dynamic>? buttonParams}) async {
     if (!_isInitialized) {
       throw StateError('Revolut SDK not initialized. Call init() first.');
     }
 
     try {
-      final result = await _channel.invokeMethod('provideButton', {
-        'buttonParams': buttonParams,
-      });
+      final result = await _channel.invokeMethod('provideButton', {'buttonParams': buttonParams});
 
-      if (result is Map<String, dynamic>) {
-        return ButtonResultData.fromMap(result);
+      if (result is Map) {
+        return ButtonResultData.fromMap(_ensureStringDynamicMap(result));
       }
       throw FormatException('Invalid response format from native side');
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during provideButton: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during provideButton: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during provideButton: $e');
@@ -273,28 +247,23 @@ class RevolutSdkBridgeMethodChannel {
   }
 
   /// Creates a promotional banner widget
-  Future<BannerResultData> providePromotionalBannerWidget({
-    Map<String, dynamic>? promoParams,
-    String? themeId,
-  }) async {
+  Future<BannerResultData> providePromotionalBannerWidget({Map<String, dynamic>? promoParams, String? themeId}) async {
     if (!_isInitialized) {
       throw StateError('Revolut SDK not initialized. Call init() first.');
     }
 
     try {
-      final result = await _channel.invokeMethod(
-        'providePromotionalBannerWidget',
-        {'promoParams': promoParams, 'themeId': themeId},
-      );
+      final result = await _channel.invokeMethod('providePromotionalBannerWidget', {
+        'promoParams': promoParams,
+        'themeId': themeId,
+      });
 
-      if (result is Map<String, dynamic>) {
-        return BannerResultData.fromMap(result);
+      if (result is Map) {
+        return BannerResultData.fromMap(_ensureStringDynamicMap(result));
       }
       throw FormatException('Invalid response format from native side');
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during providePromotionalBannerWidget: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during providePromotionalBannerWidget: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during providePromotionalBannerWidget: $e');
@@ -303,10 +272,7 @@ class RevolutSdkBridgeMethodChannel {
   }
 
   /// Sets the order token for a controller
-  Future<bool> setOrderToken({
-    required String orderToken,
-    required String controllerId,
-  }) async {
+  Future<bool> setOrderToken({required String orderToken, required String controllerId}) async {
     try {
       final result = await _channel.invokeMethod('setOrderToken', {
         'orderToken': orderToken,
@@ -315,14 +281,12 @@ class RevolutSdkBridgeMethodChannel {
 
       if (result is bool) {
         return result;
-      } else if (result is Map<String, dynamic>) {
-        return result['success'] as bool? ?? false;
+      } else if (result is Map) {
+        return _ensureStringDynamicMap(result)['success'] as bool? ?? false;
       }
       return false;
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during setOrderToken: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during setOrderToken: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during setOrderToken: $e');
@@ -336,22 +300,19 @@ class RevolutSdkBridgeMethodChannel {
     required String controllerId,
   }) async {
     try {
-      final result = await _channel
-          .invokeMethod('setSavePaymentMethodForMerchant', {
-            'savePaymentMethodForMerchant': savePaymentMethodForMerchant,
-            'controllerId': controllerId,
-          });
+      final result = await _channel.invokeMethod('setSavePaymentMethodForMerchant', {
+        'savePaymentMethodForMerchant': savePaymentMethodForMerchant,
+        'controllerId': controllerId,
+      });
 
       if (result is bool) {
         return result;
-      } else if (result is Map<String, dynamic>) {
-        return result['success'] as bool? ?? false;
+      } else if (result is Map) {
+        return _ensureStringDynamicMap(result)['success'] as bool? ?? false;
       }
       return false;
     } on PlatformException catch (e) {
-      debugPrint(
-        'Platform exception during setSavePaymentMethodForMerchant: ${e.code} - ${e.message}',
-      );
+      debugPrint('Platform exception during setSavePaymentMethodForMerchant: ${e.code} - ${e.message}');
       rethrow;
     } catch (e) {
       debugPrint('Error during setSavePaymentMethodForMerchant: $e');
@@ -366,12 +327,11 @@ class RevolutSdkBridgeMethodChannel {
         final json = jsonDecode(event);
         _handleNativeEvent(json);
       } catch (_) {}
+      return;
     }
     if (event is Map<Object?, Object?> && event is! Map<String, dynamic>) {
       try {
-        final castedMap = event.map(
-          (key, value) => MapEntry(key.toString(), value),
-        );
+        final castedMap = event.map((key, value) => MapEntry(key.toString(), value));
         _handleNativeEvent(Map<String, dynamic>.from(castedMap));
         return;
       } catch (e) {
@@ -380,9 +340,7 @@ class RevolutSdkBridgeMethodChannel {
     }
     try {
       if (event is! Map<String, dynamic>) {
-        debugPrint(
-          'Invalid event format received: $event with type of ${event.runtimeType}',
-        );
+        debugPrint('Invalid event format received: $event with type of ${event.runtimeType}');
         return;
       }
 
@@ -394,26 +352,40 @@ class RevolutSdkBridgeMethodChannel {
         return;
       }
 
+      // LIVE LOG: Show all events in Flutter console
+      debugPrint(
+        '🔔 FLUTTER EVENT: $methodName - ${data.toString().substring(0, data.toString().length > 100 ? 100 : data.toString().length)}',
+      );
+
       switch (methodName) {
         case 'onEventChannelReady':
-          debugPrint('Event channel is ready: $data');
+          debugPrint('✅ Event channel is ready: $data');
+          break;
+        case 'printHello':
+          debugPrint('👋 Print hello: $data');
           break;
         case 'onOrderCompleted':
+          debugPrint('🎉 ORDER COMPLETED: $data');
           _callbacks.handleOrderCompleted(data);
           break;
         case 'onOrderFailed':
+          debugPrint('❌ ORDER FAILED: $data');
           _callbacks.handleOrderFailed(data);
           break;
         case 'onUserPaymentAbandoned':
+          debugPrint('⚠️ USER ABANDONED PAYMENT: $data');
           _callbacks.handleUserPaymentAbandoned(data);
           break;
         case 'onPaymentStatusUpdate':
+          debugPrint('📊 PAYMENT STATUS UPDATE: $data');
           _callbacks.handlePaymentStatusUpdate(data);
           break;
         case 'onButtonClick':
+          debugPrint('🔵 BUTTON CLICKED: $data');
           _callbacks.handleButtonClick(data);
           break;
         case 'onControllerStateChange':
+          debugPrint('🔄 CONTROLLER STATE CHANGE: $data');
           _callbacks.handleControllerStateChange(data);
           break;
         case 'onBannerInteraction':
@@ -423,6 +395,7 @@ class RevolutSdkBridgeMethodChannel {
           _callbacks.handleLifecycleEvent(data);
           break;
         case 'onDeepLinkReceived':
+          debugPrint('🔗 DEEP LINK RECEIVED: $data');
           _callbacks.handleDeepLinkEvent(data);
           break;
         case 'onNetworkStatusUpdate':
@@ -444,16 +417,16 @@ class RevolutSdkBridgeMethodChannel {
           _callbacks.handleSessionEvent(data);
           break;
         default:
-          debugPrint('Unknown event method: $methodName');
+          debugPrint('❓ Unknown event method: $methodName');
       }
     } catch (e) {
-      debugPrint('Error handling native event: $e');
+      debugPrint('❌ Error handling native event: $e');
       // Don't crash on event handling errors
     }
   }
 
   /// Retries setting up the event channel
-  void _retryEventChannelSetup() {
+  void _retryEventChannelSetup() {  
     if (_eventSubscription != null) {
       _eventSubscription?.cancel();
       _eventSubscription = null;

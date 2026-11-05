@@ -58,7 +58,7 @@ xcodebuild -project revolut_sdk_bridge.xcodeproj \
 
 ## 🚨 Important Notes
 
-- **Minimum iOS Version**: 13.0
+- **Minimum iOS Version**: 15.0
 - **Dependencies**: Requires Revolut Pay SDK (add to your app's Podfile)
 - **Framework Type**: Dynamic framework
 - **Bundle ID**: com.revolut.sdk.bridge
