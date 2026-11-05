@@ -3,7 +3,7 @@ PODS:
   - HCaptcha (2.9.2):
     - HCaptcha/Core (= 2.9.2)
   - HCaptcha/Core (2.9.2)
-  - InputMask (4.3.0)
+  - InputMask (6.1.0)
   - integration_test (0.0.1):
     - Flutter
   - lottie-ios (4.5.2)
@@ -13,24 +13,24 @@ PODS:
   - PhoneNumberKit/PhoneNumberKitCore (4.0.1)
   - PhoneNumberKit/UIKit (4.0.1):
     - PhoneNumberKit/PhoneNumberKitCore
-  - revolut_sdk_bridge (1.0.0):
+  - revolut_sdk_bridge (0.2.0):
     - Flutter
-    - RevolutPayments/RevolutPay (~> 3.9.0)
-  - RevolutPayments/RevolutPay (3.9.1):
+    - RevolutPayments/RevolutPay (= 3.18.0)
+  - RevolutPayments/RevolutPay (3.18.0):
     - HCaptcha (< 2.9.3, >= 2.8)
-    - InputMask (~> 4.2)
-    - lottie-ios (< 5.0, >= 4.4.1)
+    - InputMask (~> 6.1)
+    - lottie-ios (< 4.6.0, >= 4.4.1)
     - PhoneNumberKit (< 4.0.2, >= 4.0)
     - RevolutPayments/RevolutPaymentsCore
     - SDWebImage (< 6.0, >= 5.19.1)
     - TrustKit (< 4.0, >= 3.0.4)
-  - RevolutPayments/RevolutPaymentsAPI (3.9.1)
-  - RevolutPayments/RevolutPaymentsCore (3.9.1):
+  - RevolutPayments/RevolutPaymentsAPI (3.18.0)
+  - RevolutPayments/RevolutPaymentsCore (3.18.0):
     - RevolutPayments/RevolutPaymentsAPI
-  - SDWebImage (5.21.2):
-    - SDWebImage/Core (= 5.21.2)
-  - SDWebImage/Core (5.21.2)
-  - TrustKit (3.0.7)
+  - SDWebImage (5.21.7):
+    - SDWebImage/Core (= 5.21.7)
+  - SDWebImage/Core (5.21.7)
+  - TrustKit (3.0.8)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
@@ -56,17 +56,17 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/revolut_sdk_bridge/ios"
 
 SPEC CHECKSUMS:
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   HCaptcha: c12d6bc9ab9c68a7c6bb43ade896f99f67ac9e74
-  InputMask: 3674235e12cc52e769b01b2f35d6bbc94cd059c7
+  InputMask: 71d291dc54d2deaeac6512afb6ec2304228c0bb7
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
   lottie-ios: 96784afc26ea031d3e2b6cae342a4b8915072489
-  PhoneNumberKit: a74155066daa6450475f6a029068eb919fb00d5d
-  revolut_sdk_bridge: 30d3869884545b60aa2dade12fc5064997059f78
-  RevolutPayments: 56734e79f46fd9967c7cd29a381766bd01d2743a
-  SDWebImage: 9f177d83116802728e122410fb25ad88f5c7608a
-  TrustKit: 1050f3ce0595f8ed775f1237b7f590e3a4f93e91
+  PhoneNumberKit: 4705afaa4d68ffb8298e2d5b3914adc131c5e977
+  revolut_sdk_bridge: a85b7174c0317e2b67e1225646bd87805666db68
+  RevolutPayments: a1d4bde9cbf99bbc4072047db899a8195885f886
+  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
+  TrustKit: d0f83be9217dea8d40c59150928080e0ff822438
 
-PODFILE CHECKSUM: 76f45e52c6cf5fb26bc688fe3f3a9310c1d999b6
+PODFILE CHECKSUM: d19089e030bae7a2df9d39983cc8bc5256a2d848
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0

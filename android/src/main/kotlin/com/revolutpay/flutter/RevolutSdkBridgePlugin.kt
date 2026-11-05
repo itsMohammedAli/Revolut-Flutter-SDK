@@ -219,7 +219,7 @@ class RevolutSdkBridgePlugin: FlutterPlugin, MethodCallHandler, ActivityAware, N
         try {
             // Reports the bundled native Revolut Pay (Lite) SDK version.
             result.success(mapOf(
-                "version" to "3.2.0",
+                "version" to "3.4.0",
                 "platform" to "Android",
                 "buildNumber" to "1"
             ))
@@ -841,7 +841,7 @@ class RevolutPayButtonView(
         return ButtonParams(
             radius = radius,
             buttonSize = size,
-            variantModes = VariantModes(lightMode = lightVariant, darkMode = darkVariant),
+            variants = VariantModes(lightMode = lightVariant, darkMode = darkVariant),
             boxText = boxText,
             boxTextCurrency = currency
         )
@@ -985,8 +985,8 @@ class RevolutPayPromoBannerView(
 }
 
 private fun resolvePreferredMode(value: String?): PreferredMode = when (value?.trim()?.lowercase()) {
-    "retailonly", "retail-only", "retail_only" -> PreferredMode.RetailOnly
-    "business" -> PreferredMode.Business
-    "businessonly", "business-only", "business_only" -> PreferredMode.BusinessOnly
-    else -> PreferredMode.Retail
+    "retailonly", "retail-only", "retail_only" -> PreferredMode.RETAIL_ONLY
+    "business" -> PreferredMode.BUSINESS
+    "businessonly", "business-only", "business_only" -> PreferredMode.BUSINESS_ONLY
+    else -> PreferredMode.RETAIL
 }

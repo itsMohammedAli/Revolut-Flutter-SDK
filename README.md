@@ -3,7 +3,7 @@
 A Flutter plugin for accepting **Revolut Pay** payments using the native Revolut Pay
 SDKs — the **Revolut Pay Lite SDK** on Android and the **Revolut Pay SDK** on iOS.
 
-> Status: early release (`0.1.0`). The native payment flows must be verified against a
+> Status: early release (`0.2.0`). The native payment flows must be verified against a
 > real Revolut **merchant sandbox key** on a device/simulator — see
 > [Sandbox testing](#sandbox-testing). This plugin wraps native SDKs that cannot run in
 > CI, so always test the real flow before shipping.
@@ -25,9 +25,11 @@ confirmation-flow/controller API. The former `createController` / `setOrderToken
 
 ## Requirements
 
-- **Android:** `minSdkVersion` **24** (Android 7.0). Your `MainActivity` **must** extend
+- **Android:** `minSdkVersion` **28** (Android 9). Your `MainActivity` **must** extend
   `FlutterFragmentActivity` (see below).
-- **iOS:** **13.0+**.
+- **iOS:** **15.0+**.
+- **Flutter:** **3.41.0+**, Dart **3.9.0+**.
+- Native SDK versions: Android Revolut Pay Lite **3.4.0**, iOS Revolut Pay **3.18.0**.
 - A Revolut **merchant public key** (sandbox or production) from the
   [Revolut Merchant Dashboard](https://merchant.revolut.com/).
 - An **order token** created server-side via the Revolut Merchant API. The plugin never
@@ -38,7 +40,9 @@ confirmation-flow/controller API. The former `createController` / `setOrderToken
 ```yaml
 dependencies:
   revolut_sdk_bridge:
-    git: https://github.com/berhili098/Revolut-Flutter-SDK.git
+    git:
+      url: https://github.com/itsMohammedAli/Revolut-Flutter-SDK.git
+      ref: feat/upgrade-native-sdks
 ```
 
 ### Android setup
@@ -92,6 +96,10 @@ Add your return-URL scheme and the Revolut query schemes to `ios/Runner/Info.pli
     <string>revolut-pay</string>
 </array>
 ```
+
+For the iOS Native SDK, register your App ID with Revolut and enable the
+`webcredentials:revolut.com` Associated Domain for biometrics and passkeys, as
+explained in [Revolut's iOS setup guide](https://developer.revolut.com/docs/guides/merchant/accept-payments/online-payments/revolut-pay/mobile/ios).
 
 ## Usage
 
@@ -165,3 +173,26 @@ CrossPlatformRevolutPayPromoBanner(
 ## License
 
 [MIT](LICENSE)
+
+## Upgrading from 0.1.0
+
+Raise your iOS deployment target to 15.0 in the Podfile and Xcode project, then
+run `pod update RevolutPayments` inside your iOS directory. Android requires
+`minSdk = 28`, matching the existing integration branch.
+
+Use Java 17 for the example Android build (AGP 8.11.1, Gradle 8.14.3, Kotlin 2.2.21).
+The plugin forwards iOS payment returns through both AppDelegate and UIScene callbacks.
+
+The example uses public configuration passed at launch:
+
+```sh
+cd example
+flutter run --dart-define=REVOLUT_PUBLIC_KEY=your_public_sandbox_key
+```
+
+Optional defines: `REVOLUT_ENVIRONMENT` (defaults to `sandbox`) and
+`REVOLUT_ORDER_ENDPOINT` (your backend endpoint). Never pass a merchant secret key.
+
+Native releases were checked against
+[Maven Central](https://repo.maven.apache.org/maven2/com/revolut/payments/revolutpaylite/maven-metadata.xml)
+and the [CocoaPods spec](https://trunk.cocoapods.org/api/v1/pods/RevolutPayments/specs/3.18.0).

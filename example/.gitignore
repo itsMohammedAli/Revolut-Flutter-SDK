@@ -52,4 +52,5 @@ app.*.map.json
 
 # Configuration files with sensitive data
 /config/
-lib/revolut_config.dart
+
+/android/.kotlin/

@@ -149,6 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   additionalData: {'test_mode': true, 'source': 'flutter_example'},
                                   height: 70,
                                   onPaymentResult: (result) {
+                                    if (!mounted) return;
                                     setState(() {
                                       _paymentResults.add(result);
                                     });
@@ -160,11 +161,13 @@ class _MyHomePageState extends State<MyHomePage> {
                                     );
                                   },
                                   onPaymentError: (error) {
+                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text('Payment Error: $error'), backgroundColor: Colors.red),
                                     );
                                   },
                                   onPaymentCancelled: () {
+                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text('Payment Cancelled'),
@@ -173,6 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     );
                                   },
                                   onButtonCreated: () {
+                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text('Revolut Pay button created successfully!'),
@@ -181,6 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     );
                                   },
                                   onButtonError: () {
+                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
                                         content: Text('Failed to create Revolut Pay button'),
@@ -190,6 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   },
                                   onError: (error) {
                                     // Developer handles errors themselves
+                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red),
                                     );
@@ -235,7 +241,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       const SizedBox(height: 8),
                       Text('Environment: ${RevolutConfig.environment}'),
                       Text('Base URL: ${RevolutConfig.currentBaseUrl}'),
-                      Text('Public Key: ${RevolutConfig.currentPublicKey.substring(0, 20)}...'),
+                      Text(
+                        'Public Key: ${RevolutConfig.currentPublicKey.isEmpty ? 'Not configured' : 'Configured'}',
+                      ),
                       const SizedBox(height: 16),
                       Text('Instructions', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 8),
@@ -412,6 +420,7 @@ class _MyHomePageState extends State<MyHomePage> {
         environment: RevolutConfig.environment, // Use 'sandbox' for testing, 'production' for live payments
       );
 
+      if (!mounted) return;
       if (result) {
         setState(() {
           _isInitialized = true;
@@ -422,6 +431,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isInitialized = false;
       });
@@ -439,6 +449,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // Get plugin status
       final status = await RevolutSdkBridge().getPluginStatus();
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -452,6 +463,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Event Channel Test Error: $e'), backgroundColor: Colors.red));

@@ -40,3 +40,6 @@ migrate_working_dir/
 
 # Configuration files with sensitive data
 **/config/
+
+# Generated knowledge graph
+graphify-out/

@@ -12,7 +12,7 @@ fileprivate func nowMillis() -> Int {
     return Int(Date().timeIntervalSince1970 * 1000)
 }
 
-public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin {
+public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate {
     
     private var revolutPayKit: RevolutPayKit?
     private var buttonViews: [Int: UIView] = [:]
@@ -32,6 +32,7 @@ public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin {
         
         registrar.addMethodCallDelegate(instance, channel: channel)
         registrar.addApplicationDelegate(instance)
+        registrar.addSceneDelegate(instance)
 
         // Create log channel for callbacks
         instance.logChannel = FlutterMethodChannel(name: "revolut_sdk_bridge_logs", binaryMessenger: registrar.messenger())
@@ -51,6 +52,25 @@ public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin {
         return false
     }
     
+    // Flutter 3.41+ delivers payment return URLs through the scene lifecycle.
+    public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) -> Bool {
+        for context in URLContexts {
+            RevolutPayKit.handle(url: context.url)
+        }
+        return false
+    }
+
+    public func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions?
+    ) -> Bool {
+        for context in connectionOptions?.urlContexts ?? [] {
+            RevolutPayKit.handle(url: context.url)
+        }
+        return false
+    }
+
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "initialize":
@@ -342,7 +362,7 @@ public class RevolutSdkBridgePlugin: NSObject, FlutterPlugin {
         logToDart("INFO", "Getting SDK version information")
         
         let sdkVersion: [String: Any] = [
-            "version": "3.9.0",
+            "version": "3.18.0",
             "platform": "iOS",
             "buildNumber": "1",
             "message": "Revolut Pay SDK version information"

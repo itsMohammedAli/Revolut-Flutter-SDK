@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- Upgrade Android Revolut Pay Lite to 3.4.0 and iOS Revolut Pay to 3.18.0.
+- Require iOS 15.0, Flutter 3.41.0 and Dart 3.9.0 or newer.
+- Adapt Android button variants and preferred payment modes to the updated SDK API.
+- Align example deployment targets and provide public configuration via dart-define.
+- Forward payment return URLs through the Flutter scene lifecycle, including cold starts.
+- Update Flutter lints and validate on current Flutter stable.
+
 ## 0.1.0
 
 First public release of the Revolut Pay Flutter plugin. It wraps the native
