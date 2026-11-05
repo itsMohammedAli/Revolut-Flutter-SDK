@@ -77,6 +77,16 @@ dependencies:
    `<queries><package android:name="com.revolut.revolut"/></queries>` entry, so you do
    **not** need `QUERY_ALL_PACKAGES` (a Play Store restricted permission).
 
+The updated SDK pulls in libraries that both include an OSGi manifest. If your
+app reports a duplicate Java resource, add this inside `android {}` in your app's
+`build.gradle.kts` (as in the example):
+
+```kotlin
+packaging {
+    resources.excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+}
+```
+
 ### iOS setup
 
 Add your return-URL scheme and the Revolut query schemes to `ios/Runner/Info.plist`:
