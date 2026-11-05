@@ -1,5 +1,9 @@
 ## Unreleased
 
+- Migrate Android to built-in Kotlin and AGP 9.0.1, removing explicit KGP application.
+- Require Flutter 3.44 / Dart 3.12; the example requires Flutter 3.47 / Dart 3.13
+  and uses Gradle 9.1 with built-in Kotlin enabled.
+
 - Prevent Android payment forms from reopening for completed orders, block overlapping
   native/custom payment attempts, and ignore duplicate terminal callbacks.
 

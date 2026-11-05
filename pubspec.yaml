@@ -6,8 +6,8 @@ repository: https://github.com/itsMohammedAli/Revolut-Flutter-SDK
 issue_tracker: https://github.com/itsMohammedAli/Revolut-Flutter-SDK/issues
 
 environment:
-  sdk: ^3.9.0
-  flutter: '>=3.41.0'
+  sdk: ^3.12.0
+  flutter: '>=3.44.0'
 
 dependencies:
   flutter:

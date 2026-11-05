@@ -19,7 +19,9 @@ the plugin does not create orders or require your merchant secret key.
 
 ## Requirements
 
-- Flutter **3.41.0+**, Dart **3.9.0+**, as declared in `pubspec.yaml`.
+- Flutter **3.44.0+**, Dart **3.12.0+**, as declared in `pubspec.yaml`.
+- The example requires Flutter **3.47.0+** / Dart **3.13.0+** and uses AGP **9.0.1**
+  with built-in Kotlin enabled.
 - Android **9+** (`minSdk = 28`) with a `FlutterFragmentActivity` host.
 - iOS **15+**.
 - Native SDKs: Android Revolut Pay Lite **3.4.0**, iOS Revolut Pay **3.18.0**.
